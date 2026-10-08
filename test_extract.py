@@ -1,7 +1,9 @@
 import json
 import pytest
 import os
-from app.extract import extract_indicators, normalize_text
+import hmac
+import hashlib
+from app.extract import extract_indicators, normalize_text, hash_ioc
 
 @pytest.fixture
 def fixtures():
@@ -31,3 +33,24 @@ def test_normalize_text(fixtures):
         elif fix["id"] == "scam_en_2":
             assert "<UPI>" in norm
             assert "<AMT>" in norm
+
+def test_hash_ioc():
+    h1 = hash_ioc("  +919876543210  ")
+    h2 = hash_ioc("+919876543210")
+    h3 = hash_ioc("+919876543211")
+    
+    assert len(h1) == 64
+    assert h1 == h2  # Strips and lowercases
+    assert h1 != h3  # Different IOC has different hash
+    assert hash_ioc("") == ""
+
+def test_phone_normalization_boundary():
+    # Exactly 10 digits
+    text_10 = "call me at 9876543210 now"
+    assert "<PHONE>" in normalize_text(text_10)
+    
+    # Less than 10 digits (e.g. 6-digit OTP code)
+    text_6 = "your verification code is 123456"
+    norm_6 = normalize_text(text_6)
+    assert "<PHONE>" not in norm_6
+    assert "<N>" in norm_6  # Caught by digit run, not phone

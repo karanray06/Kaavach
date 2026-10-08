@@ -1,5 +1,15 @@
+import os
+import hmac
+import hashlib
 import re
 from typing import Dict, List, Any
+from dotenv import load_dotenv
+
+load_dotenv()
+
+HMAC_KEY = os.environ.get("KAVACH_HMAC_KEY")
+if not HMAC_KEY:
+    raise RuntimeError("KAVACH_HMAC_KEY environment variable is required for PII hashing. Please set it in your environment or .env file.")
 
 # Regex patterns
 URL_PATTERN = re.compile(r'https?://[^\s]+')
@@ -9,6 +19,15 @@ PHONE_PATTERN = re.compile(r'(?:\+?\d{1,3}[\s-]?)?(?:\(?\d{2,4}\)?[\s-]?)?\d{3,4
 AMOUNT_PATTERN = re.compile(r'(?:Rs\.?|INR|\$|₹)\s*\d+(?:,\d+)*(?:\.\d+)?', re.IGNORECASE)
 EMAIL_PATTERN = re.compile(r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+', re.IGNORECASE)
 CRYPTO_PATTERN = re.compile(r'\b[13][a-km-zA-HJ-NP-Z1-9]{25,34}\b|0x[a-fA-F0-9]{40}', re.IGNORECASE)
+
+def hash_ioc(value: str) -> str:
+    """
+    Computes an HMAC-SHA256 hash of stripped, lowercased IOC.
+    """
+    if not value:
+        return ""
+    normalized = value.strip().lower().encode("utf-8")
+    return hmac.new(HMAC_KEY.encode("utf-8"), normalized, hashlib.sha256).hexdigest()
 
 def extract_indicators(text: str) -> Dict[str, List[str]]:
     """
@@ -61,12 +80,16 @@ def normalize_text(text: str) -> str:
     # Amounts
     normalized = AMOUNT_PATTERN.sub("<AMT>", normalized)
     
-    # Phones
-    for phone in PHONE_PATTERN.findall(normalized):
-        digits_only = re.sub(r'\D', '', phone)
+    # Phones: replace via PHONE_PATTERN.sub checking digits length >= 10
+    def replace_phone(match: re.Match) -> str:
+        matched_str = match.group(0)
+        digits_only = re.sub(r'\D', '', matched_str)
         if len(digits_only) >= 10:
-            normalized = normalized.replace(phone, "<PHONE>")
-            
+            return "<PHONE>"
+        return matched_str
+
+    normalized = PHONE_PATTERN.sub(replace_phone, normalized)
+    
     # Digits runs
     normalized = re.sub(r'\d+', '<N>', normalized)
     
