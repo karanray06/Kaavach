@@ -14,7 +14,7 @@ from app.extract import extract_indicators, normalize_text, hash_ioc
 from app.rules import compute_rule_score
 from app.gemma import classify_text_and_image
 from app.dna import assign_campaign
-from app.snow import insert_scan, insert_indicators
+from app.snow import insert_scan, insert_indicators, insert_or_update_campaign
 
 logger = logging.getLogger("kavach.pipeline")
 
@@ -49,14 +49,24 @@ def record_scan_in_memory(scan_id: str, scan_record: dict):
 
 def sync_persist_to_snowflake(scan_record: dict, snowflake_indicators: List[dict]):
     """
-    Persists scan and hashed indicators to Snowflake. Must never raise or crash the caller.
+    Persists scan, hashed indicators, and campaign to Snowflake. Must never raise or crash the caller.
     """
     try:
         insert_scan(scan_record)
         if snowflake_indicators:
             insert_indicators(snowflake_indicators)
+        campaign_info = scan_record.get("campaign")
+        if campaign_info and isinstance(campaign_info, dict) and campaign_info.get("id"):
+            tactics = scan_record.get("tactics", [])
+            primary_tactic = tactics[0].get("code", "UNKNOWN") if tactics and isinstance(tactics[0], dict) else "UNKNOWN"
+            insert_or_update_campaign({
+                "id": campaign_info.get("id"),
+                "primary_tactic": primary_tactic,
+                "variant_no": campaign_info.get("variant_no", 1),
+                "centroid_simhash": campaign_info.get("centroid_simhash", 0)
+            })
     except Exception as e:
-        logger.warning("Snowflake background persistence failed: %s", e)
+        logger.error("Snowflake background persistence failed: %s", e, exc_info=True)
 
 def run_scan(
     text: str,
@@ -85,7 +95,7 @@ def run_scan(
     
     # 4. Classify & 6. Explain
     t3 = time.time()
-    could_not_assess = False
+    ai_available = True
     try:
         gemma_result_str = classify_text_and_image(text=text, image_bytes=image_bytes, mime_type=mime_type, lang=lang)
         gemma_result = json.loads(gemma_result_str)
@@ -94,13 +104,19 @@ def run_scan(
         explanation = gemma_result.get("reasoning_short", "No reasoning provided.")
         actions = gemma_result.get("actions", [])
     except Exception as e:
-        logger.error(f"Gemma call failed: {e}")
-        could_not_assess = True
+        logger.error("AI classification call failed: %s", e)
+        ai_available = False
         gemma_confidence = 0.0
         tactics = []
-        explanation = f"Automated analysis unavailable; rule checks found: {len(rule_hits)} hits."
-        actions = []
+        explanation = "AI analysis unavailable. Rule-based result only, may be incomplete."
+        actions = ["Verify sender independently through official sources.", "Do not click any unverified links.", "Never share OTP, PIN, or confidential details."]
     
+    # Rename MALICIOUS_LINK to SUSPICIOUS_LINK where link is unverified
+    if tactics and isinstance(tactics, list):
+        for t in tactics:
+            if isinstance(t, dict) and t.get("code") == "MALICIOUS_LINK":
+                t["code"] = "SUSPICIOUS_LINK"
+
     t_classify = time.time()
     timings["classify"] = int((t_classify - t3) * 1000)
     timings["explain"] = int((time.time() - t_classify) * 1000)
@@ -119,8 +135,11 @@ def run_scan(
     risk_score = 0.4 * rule_score + 0.6 * gemma_confidence + seen_penalty
     risk_score = min(risk_score, 1.0)
     
-    if could_not_assess:
-        verdict = "COULD_NOT_ASSESS"
+    if not ai_available:
+        verdict = "UNCERTAIN"
+    elif gemma_confidence >= 0.85:
+        # C.2: when AI is_scam_likelihood >= 0.85 the verdict must be LIKELY_SCAM regardless of rule score
+        verdict = "LIKELY_SCAM"
     elif risk_score < 0.35:
         verdict = "NO_RED_FLAGS"
     elif risk_score < 0.65:
@@ -134,7 +153,7 @@ def run_scan(
     variant_no = 0
     campaign_info = {}
     
-    if verdict not in ["NO_RED_FLAGS", "COULD_NOT_ASSESS"]:
+    if verdict not in ["NO_RED_FLAGS"]:
         norm_text = normalize_text(text)
         primary_tactic = "UNKNOWN"
         if tactics and isinstance(tactics, list) and len(tactics) > 0:
@@ -151,7 +170,7 @@ def run_scan(
     
     out_indicators = []
     snowflake_indicators = []
-    if verdict in ["SUSPICIOUS", "LIKELY_SCAM"]:
+    if verdict in ["UNCERTAIN", "SUSPICIOUS", "LIKELY_SCAM"]:
         for k, v_list in indicators.items():
             for v in v_list:
                 if k in ("url", "phone", "upi", "email", "crypto", "domain"):
@@ -185,6 +204,7 @@ def run_scan(
         "verdict": verdict,
         "risk_score": risk_score,
         "confidence": gemma_confidence,
+        "ai_available": ai_available,
         "tactics": tactics,
         "indicators": out_indicators,
         "explanation": explanation,

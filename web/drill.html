@@ -98,15 +98,15 @@
             
             <div class="reveal-section" id="revealSection">
                 <h2 class="heading heading-md" id="revealTitle" style="margin-bottom:8px;">IT'S A SCAM</h2>
-                <div class="mono left-accent-coral" style="margin-bottom:24px;">TACTIC: FAKE_KYC</div>
+                <div class="mono left-accent-coral" id="drillTactic" style="margin-bottom:24px;">TACTIC: FAKE_KYC</div>
                 
                 <p class="text-neutral" style="margin-bottom: 16px;">The highlighted parts are structural red flags:</p>
-                <div class="payload-box" style="margin:0; padding:16px;">
+                <div class="payload-box" id="redFlagBox" style="margin:0; padding:16px;">
                     Dear customer, your bank account requires <span class="red-flag">urgent verification</span>. Click here: <span class="red-flag">http://sbi-verify.example.invalid</span>
                 </div>
                 
                 <div style="margin-top:40px; text-align:center;">
-                    <a href="#" class="btn btn-ghost">NEXT DRILL</a>
+                    <button type="button" id="nextDrillBtn" class="btn btn-ghost" onclick="resetDrill()">NEXT DRILL</button>
                 </div>
             </div>
         </div>

@@ -82,5 +82,12 @@
     "pattern": "\\b(account will be blocked|kyc update|kyc verification|verify your account|pan link|aadhaar link|link expired|bank executive)\\b|অ্যাকাউন্ট ব্লক|কেওয়াইসी আপডেট|অ্যাকাউন্ট যাচাই|खाता ब्लॉक|केवाईसी अपडेट|खाता सत्यापित",
     "weight": 0.5,
     "description": "Fake KYC or account block"
+  },
+  {
+    "id": "R013",
+    "name": "task_review_job_scam",
+    "pattern": "\\b(write google reviews|each review pays|per review|earn per task|telegram job|deposit to unlock tasks)\\b",
+    "weight": 0.85,
+    "description": "Task, review manipulation, or deposit-to-work job scam"
   }
 ]

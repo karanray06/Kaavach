@@ -13,14 +13,17 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
+import io
+from PIL import Image, ImageOps, UnidentifiedImageError
 from app.config import GEMINI_MODEL_ID
 from app.pipeline import run_scan, MEMORY_STORE, MEMORY_STORE_LOCK
-from app.snow import check_health, get_trending_tactics, get_recent_campaigns
+from app.snow import check_health, get_trending_tactics, get_recent_campaigns, get_snowflake_connection
 
 load_dotenv()
 logger = logging.getLogger("kavach.main")
 
-MAX_IMAGE_SIZE = 5 * 1024 * 1024  # 5 MB
+Image.MAX_IMAGE_PIXELS = 25_000_000
+MAX_IMAGE_SIZE = 10 * 1024 * 1024  # 10 MB
 ALLOWED_MIMES = {"image/png", "image/jpeg", "image/webp"}
 
 limiter = Limiter(key_func=get_remote_address)
@@ -128,6 +131,62 @@ async def api_campaigns():
         ]
     return JSONResponse(content={"source": "memory", "campaigns": camp_list})
 
+@app.get("/api/drill/sample")
+async def drill_sample():
+    """
+    Returns recent campaign or scan sample (redacted) for training drill.
+    """
+    conn = get_snowflake_connection()
+    if conn:
+        try:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT s.scan_id, s.primary_tactic, s.campaign_id, i.ioc_display
+                FROM SCANS s
+                LEFT JOIN INDICATORS i ON s.scan_id = i.scan_id
+                WHERE s.is_demo = FALSE AND s.verdict IN ('SUSPICIOUS', 'LIKELY_SCAM')
+                ORDER BY s.ts DESC LIMIT 1
+            """)
+            row = cur.fetchone()
+            cur.close()
+            if row:
+                tactic = row[1] if row[1] and row[1] != "UNKNOWN" else "FAKE_KYC"
+                ioc = row[3] if row[3] else "http://sbi-verify.example.invalid"
+                text = f"Dear customer, your bank account requires urgent verification for {tactic}. Click here: {ioc}"
+                return JSONResponse(content={
+                    "source": "snowflake",
+                    "tactic": tactic,
+                    "text": text,
+                    "red_flags": ["urgent verification", ioc],
+                    "campaign_id": row[2]
+                })
+        except Exception as e:
+            logger.warning("Failed to query drill sample from Snowflake: %s", e)
+
+    with MEMORY_STORE_LOCK:
+        for s in reversed(list(MEMORY_STORE["scans"].values())):
+            if s.get("verdict") in ("SUSPICIOUS", "LIKELY_SCAM"):
+                tactics = s.get("tactics", [])
+                tactic = tactics[0].get("code", "FAKE_KYC") if tactics and isinstance(tactics[0], dict) else "FAKE_KYC"
+                inds = s.get("indicators", [])
+                ioc = inds[0].get("display", "http://sbi-verify.example.invalid") if inds else "http://sbi-verify.example.invalid"
+                text = f"Dear customer, your bank account requires urgent verification for {tactic}. Click here: {ioc}"
+                return JSONResponse(content={
+                    "source": "memory",
+                    "tactic": tactic,
+                    "text": text,
+                    "red_flags": ["urgent verification", ioc],
+                    "campaign_id": s.get("campaign", {}).get("id") if s.get("campaign") else None
+                })
+
+    return JSONResponse(content={
+        "source": "default",
+        "tactic": "FAKE_KYC",
+        "text": "Dear customer, your bank account requires urgent verification. Click here: http://sbi-verify.example.invalid",
+        "red_flags": ["urgent verification", "http://sbi-verify.example.invalid"],
+        "campaign_id": None
+    })
+
 @app.post("/api/scan")
 @limiter.limit("20/minute")
 async def scan(
@@ -137,12 +196,12 @@ async def scan(
     image: Optional[UploadFile] = File(None),
     lang: str = Form("en")
 ):
-    # Check Content-Length header against 5MB limit (+64KB form-data boundary allowance)
+    # Check Content-Length header against 10MB limit (+64KB form-data boundary allowance)
     content_length = request.headers.get("content-length")
     if content_length:
         try:
             if int(content_length) > MAX_IMAGE_SIZE + (64 * 1024):
-                return JSONResponse(status_code=413, content={"error": "Payload exceeds 5MB limit"})
+                return JSONResponse(status_code=413, content={"error": "Payload exceeds 10MB limit"})
         except ValueError:
             pass
 
@@ -154,14 +213,35 @@ async def scan(
     mime_type = "image/png"
     if image:
         # Read MAX + 1 bytes to prevent unbounded RAM usage
-        image_bytes = await image.read(MAX_IMAGE_SIZE + 1)
-        if len(image_bytes) > MAX_IMAGE_SIZE:
-            return JSONResponse(status_code=413, content={"error": "Image file exceeds 5MB limit"})
+        raw_bytes = await image.read(MAX_IMAGE_SIZE + 1)
+        if len(raw_bytes) > MAX_IMAGE_SIZE:
+            return JSONResponse(status_code=413, content={"error": "Image file exceeds 10MB limit"})
             
-        detected_mime = detect_image_magic(image_bytes[:16])
+        detected_mime = detect_image_magic(raw_bytes[:16])
         if not detected_mime or detected_mime not in ALLOWED_MIMES:
             return JSONResponse(status_code=400, content={"error": "Invalid image format. Allowed: PNG, JPEG, WebP"})
-        mime_type = detected_mime
+        
+        # Pillow Preprocessing: verify, fix EXIF orientation, convert RGB, downscale to 1600px, re-encode JPEG q85, strip EXIF
+        try:
+            img = Image.open(io.BytesIO(raw_bytes))
+            img.verify()
+            img = Image.open(io.BytesIO(raw_bytes))
+            img = ImageOps.exif_transpose(img) or img
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            w, h = img.size
+            longest = max(w, h)
+            if longest > 1600:
+                scale = 1600.0 / longest
+                new_size = (max(1, int(w * scale)), max(1, int(h * scale)))
+                img = img.resize(new_size, Image.Resampling.LANCZOS)
+            out_buf = io.BytesIO()
+            img.save(out_buf, format="JPEG", quality=85, optimize=True)
+            image_bytes = out_buf.getvalue()
+            mime_type = "image/jpeg"
+        except (UnidentifiedImageError, OSError, ValueError, Image.DecompressionBombError) as err:
+            logger.warning("Corrupt or invalid image upload: %s", err)
+            return JSONResponse(status_code=400, content={"error": "Corrupt or unreadable image file"})
 
     # If there's neither text nor image, reject with 400
     if not text and not image_bytes:
@@ -185,3 +265,4 @@ async def scan(
     except Exception as e:
         logger.error("Scan processing encountered an unhandled exception: %s", e)
         return JSONResponse(status_code=500, content={"error": "Internal scan processing error"})
+

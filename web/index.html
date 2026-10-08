@@ -74,7 +74,7 @@
                 </div>
                 <h1 class="heading heading-huge" style="margin-bottom: 24px;">KAVACH<br>SYSTEM</h1>
                 <div class="left-accent-ink mono" style="color: var(--neutral); max-width: 400px; margin-bottom: 40px; line-height: 1.8;">
-                    OPEN SOURCE / SCAM TRIAGE / GEMMA 4 <br>
+                    OPEN SOURCE / SCAM TRIAGE / <span id="activeModelHero">AI EARLY WARNING</span> <br>
                     A STRUCTURAL DEFENSE MECHANISM AGAINST SOCIAL ENGINEERING CAMPAIGNS.
                 </div>
                 <a href="/scan" class="btn btn-primary">INITIALIZE SCAN</a>
@@ -96,7 +96,7 @@
             <div class="bento-cell" style="grid-column: span 6;">
                 <div class="mono left-accent-coral" style="margin-bottom: 24px;">01. SCAN ENGINE</div>
                 <h2 class="heading heading-md" style="margin-bottom: 16px;">Structural Analysis</h2>
-                <p style="margin-bottom: 24px; color: var(--neutral);">Gemma 4 classification with rule-based extraction scores messages and screenshots for risk vectors.</p>
+                <p style="margin-bottom: 24px; color: var(--neutral);"><span id="activeModelDesc">AI</span> classification with rule-based extraction scores messages and screenshots for risk vectors.</p>
                 <div class="mockup-box">
                     > INGESTING PAYLOAD...<br>
                     > EXTRACTING ENTITIES... [OK]<br>
@@ -125,5 +125,18 @@
     </div>
 
     <script src="/static/dist/reveal.js"></script>
+    <script>
+        fetch('/api/health')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data && data.model) {
+                    var hero = document.getElementById('activeModelHero');
+                    if (hero) hero.innerText = data.model.toUpperCase();
+                    var desc = document.getElementById('activeModelDesc');
+                    if (desc) desc.innerText = data.model;
+                }
+            })
+            .catch(function() {});
+    </script>
 </body>
 </html>

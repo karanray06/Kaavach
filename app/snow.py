@@ -67,6 +67,8 @@ def insert_scan(scan_data: dict):
         """
         tactics = scan_data.get("tactics", [])
         primary_tactic = tactics[0].get("code") if tactics and isinstance(tactics[0], dict) else "UNKNOWN"
+        campaign = scan_data.get("campaign")
+        campaign_id = campaign.get("id") if isinstance(campaign, dict) else None
         
         cur.execute(query, (
             scan_data.get("scan_id"),
@@ -76,12 +78,13 @@ def insert_scan(scan_data: dict):
             scan_data.get("verdict"),
             float(scan_data.get("risk_score", 0.0)),
             primary_tactic,
-            scan_data.get("campaign", {}).get("id")
+            campaign_id
         ))
+        conn.commit()
         cur.close()
         return True
     except Exception as e:
-        logger.warning("Error inserting scan to Snowflake: %s", e)
+        logger.error("Error inserting scan to Snowflake: %s", e, exc_info=True)
         return False
 
 def insert_indicators(indicators_data: list):
@@ -111,10 +114,11 @@ def insert_indicators(indicators_data: list):
             for item in indicators_data
         ]
         cur.executemany(query, params)
+        conn.commit()
         cur.close()
         return True
     except Exception as e:
-        logger.warning("Error inserting indicators to Snowflake: %s", e)
+        logger.error("Error inserting indicators to Snowflake: %s", e, exc_info=True)
         return False
 
 def insert_or_update_campaign(campaign_data: dict):
@@ -148,10 +152,11 @@ def insert_or_update_campaign(campaign_data: dict):
             int(campaign_data.get("variant_no", 1)),
             int(campaign_data.get("centroid_simhash", 0))
         ))
+        conn.commit()
         cur.close()
         return True
     except Exception as e:
-        logger.warning("Error merging campaign to Snowflake: %s", e)
+        logger.error("Error merging campaign to Snowflake: %s", e, exc_info=True)
         return False
 
 def get_trending_tactics():

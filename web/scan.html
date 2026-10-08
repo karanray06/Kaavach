@@ -159,6 +159,7 @@
                 <span id="dropText" class="mono text-neutral">CLICK OR DRAG IMAGE</span>
                 <input type="file" id="imageInput" accept="image/png, image/jpeg, image/webp" style="display:none;">
                 <img id="imagePreview" src="">
+                <span id="clearImageBtn" class="mono text-warn" style="display:none; position:absolute; bottom:8px; right:8px; z-index:10; background:var(--surface); padding:4px 8px; border:1px solid var(--grid);">CLEAR IMAGE</span>
             </div>
 
             <div class="mono" style="margin-bottom: 8px;">[ TEXT PAYLOAD ]</div>
@@ -183,6 +184,10 @@
         </form>
 
         <div class="result-panel" id="resultPanel">
+            <div id="aiUnavailableBanner" style="display:none; background: #fff3cd; color: #856404; border: 1px solid #ffeeba; padding: 12px 16px; margin-bottom: 24px; font-family: var(--font-mono); font-size: 13px;">
+                AI analysis unavailable. Rule-based result only, may be incomplete.
+            </div>
+
             <div class="verdict-banner">
                 <div class="mono text-neutral" style="margin-bottom: 16px;">[ ANALYSIS VERDICT ]</div>
                 <h2 class="heading heading-huge" id="verdictText"></h2>

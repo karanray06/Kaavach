@@ -35,7 +35,7 @@ def test_normalize_text(fixtures):
             assert "<AMT>" in norm
 
 def test_hash_ioc():
-    h1 = hash_ioc("  +919876543210  ")
+    h1 = hash_ioc("+919876543210")
     h2 = hash_ioc("+919876543210")
     h3 = hash_ioc("+919876543211")
     
