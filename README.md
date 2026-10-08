@@ -23,40 +23,32 @@ Kaavach does **not** block messages, access your inbox, visit suspicious links, 
 
 ## 🧠 How It Works
 
-```text
-User Input
-    ↓
-Extraction & Rules
-(URLs, phones, UPI IDs, wallets)
-    ↓
-AI Classification
-(Gemini + structured analysis)
-    ↓
-Scam DNA
-(SimHash + campaign similarity)
-    ↓
-Snowflake
-(Scans, indicators, campaigns)
-    ↓
-Community Threat Intelligence
+```mermaid
+flowchart TD
+    A[User Input: Text / Screenshot] --> B[Sanitization & Upload Validation]
+    B --> C[Extraction & HMAC-SHA256 Hashing]
+    B --> D[Heuristic & Regex Rules Engine]
+    C --> E[Gemini Structured AI Classification]
+    D --> E
+    E --> F[Scam DNA: SimHash Fingerprinting]
+    F --> G[BackgroundTasks: Async Persistence]
+    G --> H[(Snowflake: SCANS, INDICATORS, CAMPAIGNS)]
+    H --> I[Radar Analytics: Trends & Growth Views]
 ```
 
 ### Key Components
 
 **Extraction & Rules**  
-Fast detection of suspicious indicators and heuristic signals.
+Fast detection of suspicious indicators and heuristic signals with zero raw PII storage (HMAC-SHA256).
 
 **AI Classification**  
-Google GenAI / Gemini analyzes the meaning and social-engineering tactics behind suspicious content.
+Google GenAI / Gemini analyzes the meaning and social-engineering tactics behind suspicious content within an isolated `<UNTRUSTED_CONTENT>` sandbox.
 
 **Scam DNA**  
 SimHash fingerprints similar scam messages and helps group them into larger campaigns.
 
-**Community Memory**  
-Snowflake stores scans, redacted indicators, and campaign information so previously observed threats can provide context for future detections.
-
-**Threat Intelligence**  
-The project integrates with Snowflake Marketplace threat-intelligence data such as the Cybersixgill Deep and Darkweb Malware Insights dataset.
+**Community Memory & Analytics**  
+Snowflake stores scans, HMAC-hashed indicators, and campaign clusters so community detections power early-warning views (`V_TRENDING_TACTICS`, `V_CAMPAIGN_GROWTH`, `V_SEEN_BEFORE`).
 
 ---
 

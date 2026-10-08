@@ -117,6 +117,43 @@ def insert_indicators(indicators_data: list):
         logger.warning("Error inserting indicators to Snowflake: %s", e)
         return False
 
+def insert_or_update_campaign(campaign_data: dict):
+    """
+    MERGE into KAVACH.CORE.CAMPAIGNS to update variant_count, last_seen, and centroid_simhash.
+    """
+    if not campaign_data or not campaign_data.get("id"):
+        return False
+    conn = get_snowflake_connection()
+    if not conn:
+        return False
+    try:
+        cur = conn.cursor()
+        query = """
+        MERGE INTO CAMPAIGNS target
+        USING (SELECT %s AS campaign_id, %s AS primary_tactic, %s AS variant_count, %s AS centroid_simhash) source
+        ON target.campaign_id = source.campaign_id
+        WHEN MATCHED THEN
+            UPDATE SET 
+                last_seen = CURRENT_TIMESTAMP(),
+                variant_count = source.variant_count,
+                centroid_simhash = source.centroid_simhash,
+                primary_tactic = source.primary_tactic
+        WHEN NOT MATCHED THEN
+            INSERT (campaign_id, first_seen, last_seen, variant_count, primary_tactic, centroid_simhash)
+            VALUES (source.campaign_id, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP(), source.variant_count, source.primary_tactic, source.centroid_simhash);
+        """
+        cur.execute(query, (
+            campaign_data.get("id"),
+            campaign_data.get("primary_tactic", "UNKNOWN"),
+            int(campaign_data.get("variant_no", 1)),
+            int(campaign_data.get("centroid_simhash", 0))
+        ))
+        cur.close()
+        return True
+    except Exception as e:
+        logger.warning("Error merging campaign to Snowflake: %s", e)
+        return False
+
 def get_trending_tactics():
     """
     Queries V_TRENDING_TACTICS view from Snowflake.

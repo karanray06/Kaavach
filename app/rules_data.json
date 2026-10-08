@@ -2,15 +2,15 @@
   {
     "id": "R001",
     "name": "urgency_words",
-    "pattern": "\\b(urgent|immediately|action required|within 24 hours|expire|asap|turant|foran|jaldi karo|seghroi|tatkal|shighroi)\\b|तुरंत|तत्काल|जल्दी करो|ফৌরান|শীঘ্রই|এখনই",
+    "pattern": "\\b(urgent|immediately|action required|within 24 hours|expire|asap|turant|foran|jaldi karo|seghroi|tatkal|shighroi|tonight)\\b|तुरंत|तत्काल|जल्दी करो|फৌরান|শীঘ্রই|এখনই",
     "weight": 0.25,
     "description": "Urgency and pressure tactics"
   },
   {
     "id": "R002",
     "name": "threat_of_action",
-    "pattern": "\\b(arrest|legal action|fir|warrant|account blocked|disconnected|suspended|giraftar|band|mukaddma)\\b|गिरफ़्तार|कानूनी कार्रवाई|ব্যাংক অ্যাকাউন্ট|গ্রেফতার|ব্লক",
-    "weight": 0.4,
+    "pattern": "\\b(arrest|legal action|fir|warrant|account blocked|disconnected|suspended|giraftar|band|mukaddma|electricity|power cut)\\b|गिरफ़्तार|कानूनी कार्रवाई|ব্যাংক অ্যাকাউন্ট|গ্রেফতার|ব্লক",
+    "weight": 0.45,
     "description": "Threat of block, arrest, or legal action"
   },
   {
@@ -37,8 +37,8 @@
   {
     "id": "R006",
     "name": "shortened_domain",
-    "pattern": "https?://(bit\\.ly|tinyurl\\.com|t\\.co|is\\.gd|rb\\.gy|goo\\.gl)/",
-    "weight": 0.4,
+    "pattern": "(?:https?://)?\\b(bit\\.ly|tinyurl\\.com|t\\.co|is\\.gd|rb\\.gy|goo\\.gl)/",
+    "weight": 0.45,
     "description": "Shortened URL"
   },
   {
@@ -79,7 +79,7 @@
   {
     "id": "R012",
     "name": "account_kyc_block",
-    "pattern": "\\b(account will be blocked|kyc update|verify your account|pan link|aadhaar link|link expired)\\b|অ্যাকাউন্ট ব্লক|কেওয়াইসी আপডেট|অ্যাকাউন্ট যাচাই|खाता ब्लॉक|केवाईसी अपडेट|खाता सत्यापित",
+    "pattern": "\\b(account will be blocked|kyc update|kyc verification|verify your account|pan link|aadhaar link|link expired|bank executive)\\b|অ্যাকাউন্ট ব্লক|কেওয়াইসी আপডেট|অ্যাকাউন্ট যাচাই|खाता ब्लॉक|केवाईसी अपडेट|खाता सत्यापित",
     "weight": 0.5,
     "description": "Fake KYC or account block"
   }

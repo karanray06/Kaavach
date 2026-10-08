@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import os
 import logging
 from typing import Optional
@@ -6,6 +5,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Form, UploadFile, File, Request, BackgroundTasks
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -14,18 +14,6 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.config import GEMINI_MODEL_ID
 from app.pipeline import run_scan, MEMORY_STORE, MEMORY_STORE_LOCK
 from app.snow import check_health, get_trending_tactics, get_recent_campaigns
-=======
-from fastapi import FastAPI, Form, UploadFile, File, Request
-from fastapi.responses import JSONResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
-import os
-from dotenv import load_dotenv
-import datetime
-import hashlib
-from typing import Optional
-from app.pipeline import run_scan
-from app.snow import check_health
->>>>>>> 1f31c34 (Phase 0: Gemma 4, fail-closed, multilingual rules, poisoning fix)
 
 load_dotenv()
 logger = logging.getLogger("kavach.main")
@@ -38,6 +26,18 @@ app = FastAPI(title="Kavach API")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.add_middleware(SlowAPIMiddleware)
+
+# CORS configuration (defaults to same-origin only unless CORS_ALLOWED_ORIGINS is set)
+cors_origins_env = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+allowed_origins = [o.strip() for o in cors_origins_env.split(",") if o.strip()]
+if allowed_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allowed_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.mount("/static", StaticFiles(directory="web"), name="static")
 
@@ -74,11 +74,7 @@ async def health_check():
     snowflake_status = check_health()
     return JSONResponse(content={
         "status": "ok",
-<<<<<<< HEAD
         "model": GEMINI_MODEL_ID,
-=======
-        "model": os.environ.get("GEMINI_MODEL_ID", "gemma-4-26b-a4b-it"),
->>>>>>> 1f31c34 (Phase 0: Gemma 4, fail-closed, multilingual rules, poisoning fix)
         "snowflake": snowflake_status,
         "dataset": "stub_dataset"
     })
@@ -134,10 +130,7 @@ async def api_campaigns():
 @limiter.limit("20/minute")
 async def scan(
     request: Request,
-<<<<<<< HEAD
     background_tasks: BackgroundTasks,
-=======
->>>>>>> 1f31c34 (Phase 0: Gemma 4, fail-closed, multilingual rules, poisoning fix)
     text: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
     lang: str = Form("en")
@@ -171,23 +164,16 @@ async def scan(
     # If there's neither text nor image, reject with 400
     if not text and not image_bytes:
         return JSONResponse(status_code=400, content={"error": "Must provide either text or image"})
-<<<<<<< HEAD
 
-    result = run_scan(
-        text=text or "",
-        image_bytes=image_bytes,
-        mime_type=mime_type,
-        lang=lang,
-        background_tasks=background_tasks
-    )
-=======
-        
-    today_salt = datetime.datetime.now().strftime("%Y-%m-%d")
-    client_ip = request.client.host if request.client else "unknown"
-    user_agent = request.headers.get("user-agent", "unknown")
-    raw = f"{client_ip}:{user_agent}:{today_salt}"
-    client_id = hashlib.sha256(raw.encode()).hexdigest()
-
-    result = run_scan(text or "", image_bytes=image_bytes, lang=lang, client_id=client_id)
->>>>>>> 1f31c34 (Phase 0: Gemma 4, fail-closed, multilingual rules, poisoning fix)
-    return JSONResponse(content=result)
+    try:
+        result = run_scan(
+            text=text or "",
+            image_bytes=image_bytes,
+            mime_type=mime_type,
+            lang=lang,
+            background_tasks=background_tasks
+        )
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error("Scan processing encountered an unhandled exception: %s", e)
+        return JSONResponse(status_code=500, content={"error": "Internal scan processing error"})

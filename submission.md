@@ -1,36 +1,42 @@
 # Kavach: An Immune System for Scams
 
 ## Elevator Pitch
-Kavach is an immune system for messaging scams, combining Google Gemini's reasoning with Snowflake's data cloud to not just detect individual scams, but track and cluster organized campaigns across languages.
+Kavach is an open-source scam triage and community early-warning system that combines Google Gemini's reasoning with Snowflake's data cloud to detect individual social engineering scams and cluster related fraud campaigns.
 
 ## The Problem
-Scams on SMS, WhatsApp, and social media are growing exponentially, often using local languages and highly contextual cultural engineering (like fake KYC, electricity bill threats, or lottery promises). Traditional regex and static rules fail because the text mutates constantly. Furthermore, users fight scams alone; there is no "community immunity."
+Scams delivered via SMS, WhatsApp, email, and social media are growing exponentially, leveraging regional languages and cultural engineering (such as fake KYC deactivations, electricity disconnection alerts, or task scams). Static regex rules fail against mutating payloads. Moreover, individuals fight scams in silos without shared threat intelligence.
 
 ## The Solution (Kavach)
-Kavach solves this through a five-loop architecture:
-1. **Extraction & Rules**: Rapidly extracts URLs, phones, UPI IDs, and crypto wallets, applying a fast heuristic score.
-2. **LLM Classification**: Uses **Google Gemini** (Gemma via the Gemini API) to perform deep semantic analysis of the text (and soon images) to detect the underlying tactic (e.g., `FAKE_KYC`, `OTP_THEFT`) and explain *why* it's a scam.
-3. **DNA Clustering**: Uses Simhash to fingerprint the text and clusters it into larger "Campaigns", revealing the scale of the operation.
-4. **Community Memory (Snowflake)**: Scans, indicators, and campaigns are continuously ingested into **Snowflake**. If one person reports a scam, the extracted indicators are instantly marked as suspicious for everyone else.
-5. **Real-world Context**: Snowflake Cortex Copilot (CoCo) allows natural language querying of trending tactics, and Kavach integrates with Snowflake Marketplace datasets (like Cybersixgill Darkweb Malware Insights) to cross-reference extracted indicators with known threat actor data.
+Kavach implements a multi-stage triage pipeline:
+1. **Extraction & Heuristics**: Rapidly parses suspicious phone numbers, UPI handles, URLs (including protocol-less shorteners), and wallets, assigning a deterministic risk score.
+2. **AI Classification**: Leverages **Google Gemini** (`gemini-3.8-flash` via `google-genai`) with structured JSON schema outputs (`response_schema`) to evaluate intent, identify underlying social engineering tactics, and provide advisory user actions.
+3. **Prompt Injection Hardening**: Fences untrusted user inputs inside `<UNTRUSTED_CONTENT>` boundaries and enforces system instructions to neutralize evasion attempts.
+4. **Scam DNA (SimHash)**: Fingerprints message structures to measure Hamming distance and group related messages into campaigns.
+5. **Community Memory & Analytics (Snowflake)**: Asynchronously persists scans, campaign clusters (via SQL `MERGE`), and HMAC-SHA256 hashed indicators into Snowflake (`KAVACH.CORE`). Analytical views (`V_TRENDING_TACTICS`, `V_CAMPAIGN_GROWTH`) power community radar dashboards without exposing raw PII.
 
 ## Technologies Used
-- **Backend**: FastAPI (Python)
-- **AI/ML**: Google GenAI SDK (Gemini API for classification)
-- **Data & Analytics**: Snowflake (Core storage, Views, Cortex Copilot, Cybersixgill Marketplace integration)
-- **Frontend**: Vanilla HTML/CSS/JS (Swiss Poster Design System)
+- **Backend**: FastAPI, Uvicorn, Python
+- **AI/ML**: Google GenAI SDK (`gemini-3.8-flash` / Gemini API)
+- **Data & Analytics**: Snowflake (`snowflake-connector-python`, Views, MERGE persistence)
+- **Security**: HMAC-SHA256 IOC hashing, `slowapi` rate limiting, magic-byte upload validation
+- **Frontend**: Vanilla HTML/CSS/JavaScript (Swiss Poster Design System)
 
-## How We Used Gemma 4 (Best Use of Gemma 4 Track)
-We integrated Google's Generative AI via the `google-genai` SDK using `gemini-3.8-flash` (standing in for the Gemma 4 / Gemini API structured outputs). 
-Gemma handles the hardest part of the pipeline: unstructured, adversarial text. It uses structured JSON output (`response_schema`) to bypass brittle regex and extract a unified schema containing a confidence score, the specific social engineering tactics used, and a clear, short explanation for the user.
+## AI Classification & Defense Posture
+We integrated Google's Generative AI via the modern `google-genai` SDK using `gemini-3.8-flash`:
+- **Structured Output**: Enforces strict Pydantic schemas (`is_scam`, `confidence`, `tactics`, `explanation`, `actions`) ensuring reliable JSON responses without markdown truncation.
+- **Prompt Isolation**: Protects the triage model by segregating `system_instruction` and encapsulating untrusted input inside `<UNTRUSTED_CONTENT>` tags with explicit delimiter sanitization.
+- **Multilingual Support**: Supports dynamic target translation for regional explanations (Hindi, Telugu, Tamil, Marathi, etc.).
 
-## How We Used Snowflake (Best Open-Source AI with Snowflake Track)
-Snowflake acts as the central nervous system for Kavach:
-- **Data Cloud**: All scans, indicators (redacted), and campaign clusters are stored in Snowflake, creating a shared global blocklist.
-- **Marketplace**: We mounted the **Cybersixgill Deep and Darkweb Malware Insights** dataset to cross-reference our extracted indicators with known dark web activity.
-- **Cortex Copilot (CoCo)**: We used CoCo to naturally query the Cybersixgill dataset, identifying threat patterns without writing complex SQL manually.
+## Snowflake Integration
+Snowflake serves as the persistent analytics and threat correlation layer:
+- **Zero Raw PII Storage**: All indicators (phone numbers, UPI IDs, emails, URLs) are hashed via HMAC-SHA256 (`ioc_hash`) using `KAVACH_HMAC_KEY` before entering `KAVACH.CORE.INDICATORS`.
+- **Atomic Campaign Upserts**: `insert_or_update_campaign` uses SQL `MERGE INTO KAVACH.CORE.CAMPAIGNS` to record campaign velocity, volume, and tactics.
+- **Production Analytics Views**: `V_TRENDING_TACTICS`, `V_CAMPAIGN_GROWTH`, and `V_SEEN_BEFORE` query live scan trends while filtering out synthetic fixtures (`WHERE is_demo = FALSE`).
+- **Asynchronous Ingestion**: Ingestion runs via FastAPI `BackgroundTasks` to keep API response latencies minimal.
+
+*(Note: External marketplace dataset joins such as Cybersixgill and Cortex Copilot NLQ integrations remain exploratory architecture concepts documented in `docs/SNOWFLAKE.md` rather than active runtime dependencies).*
 
 ## Next Steps
-- Integrate WhatsApp and Telegram bots directly.
-- Expand the DNA clustering to use Gemma embeddings instead of just Simhash.
-- Implement real-time automated reporting to authorities.
+- Expand messaging integrations (WhatsApp Business API and Telegram bot webhooks).
+- Explore vector embeddings alongside SimHash for semantic campaign clustering.
+- Integrate automated reporting workflows for community cybercrime portals.
