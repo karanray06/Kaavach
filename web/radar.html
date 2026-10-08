@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kavach - Radar</title>
+    <link rel="stylesheet" href="/static/tokens.css">
+    <style>
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            min-height: 100vh;
+        }
+        @media (min-width: 1024px) {
+            .container {
+                grid-template-columns: 300px 1fr 300px;
+            }
+        }
+        .panel {
+            padding: 44px;
+            border-right: 1px solid var(--hairline-thick);
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+        canvas {
+            width: 100%;
+            height: 100%;
+            mix-blend-mode: multiply;
+        }
+        .bar-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+        .bar-container {
+            width: 60%;
+            height: 6px;
+            background: var(--hairline-thin);
+        }
+        .bar-fill {
+            height: 100%;
+            background: var(--red);
+        }
+    </style>
+</head>
+<body class="grid-bg">
+    <div class="container">
+        <!-- Left Panel: Trends -->
+        <div class="panel">
+            <div class="headline" style="font-size: 32px;">TRENDS</div>
+            <div class="mono" style="color:var(--grey)">LAST 7 DAYS</div>
+            
+            <div id="trendsList" class="rule-section" style="padding-top:22px;">
+                <!-- Stub for now -->
+                <div class="bar-row">
+                    <span class="headline" style="font-size: 18px;">FAKE_KYC</span>
+                    <div class="bar-container"><div class="bar-fill" style="width: 80%;"></div></div>
+                    <span class="mono red">+12%</span>
+                </div>
+                <div class="bar-row">
+                    <span class="headline" style="font-size: 18px;">OTP_THEFT</span>
+                    <div class="bar-container"><div class="bar-fill" style="width: 40%;"></div></div>
+                    <span class="mono red">+4%</span>
+                </div>
+                <div class="mono" style="margin-top: 12px; color:var(--grey)">DEMO DATA</div>
+            </div>
+        </div>
+
+        <!-- Center Panel: Graph -->
+        <div class="panel" style="padding: 0; overflow: hidden; position: relative;">
+            <canvas id="campaignGraph"></canvas>
+            <div style="position:absolute; top:44px; left:44px; font-size: 32px;" class="headline">CAMPAIGN GRAPH</div>
+        </div>
+
+        <!-- Right Panel: Recent -->
+        <div class="panel" style="border-right: none;">
+            <div class="headline" style="font-size: 32px;">RECENT</div>
+            <div class="mono" style="color:var(--grey)">ACTIVE CAMPAIGNS</div>
+            
+            <div class="rule-section" style="padding-top:22px;">
+                <div class="data-row rule-row">
+                    <span class="mono">C-0042</span>
+                    <span class="mono">14 VARIANTS</span>
+                </div>
+                <div class="data-row rule-row">
+                    <span class="mono">C-0041</span>
+                    <span class="mono">3 VARIANTS</span>
+                </div>
+                <div class="mono" style="margin-top: 12px; color:var(--grey)">DEMO DATA</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Optional NLQ -->
+    <div style="position:fixed; bottom:0; width:100%; padding:22px; background:var(--paper); border-top:2px solid var(--ink); display:flex; gap:12px;">
+        <span class="mono" style="align-self:center;">ASK DATA:</span>
+        <input type="text" placeholder="e.g. How many KYC scams today?" style="flex-grow:1; padding:12px; border:1px solid var(--ink); background:transparent; font-family:var(--font-archivo);">
+        <button class="red">QUERY</button>
+    </div>
+
+    <script src="/static/reveal.js"></script>
+    <script>
+        // Draw simple dummy graph
+        const canvas = document.getElementById('campaignGraph');
+        const ctx = canvas.getContext('2d');
+        canvas.width = canvas.parentElement.clientWidth;
+        canvas.height = canvas.parentElement.clientHeight;
+        
+        const w = canvas.width;
+        const h = canvas.height;
+        
+        ctx.fillStyle = 'rgba(17,16,16,0.16)';
+        for(let i=0; i<30; i++){
+            ctx.beginPath();
+            ctx.arc(Math.random()*w, Math.random()*h, Math.random()*15+5, 0, Math.PI*2);
+            ctx.fill();
+            
+            if(i>0) {
+                ctx.beginPath();
+                ctx.moveTo(Math.random()*w, Math.random()*h);
+                ctx.lineTo(Math.random()*w, Math.random()*h);
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = 'rgba(17,16,16,0.08)';
+                ctx.stroke();
+            }
+        }
+    </script>
+</body>
+</html>

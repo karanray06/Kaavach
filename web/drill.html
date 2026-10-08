@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kavach - Drill</title>
+    <link rel="stylesheet" href="/static/tokens.css">
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 44px;
+        }
+        .drill-frame {
+            border: 2px solid var(--ink);
+            padding: 44px;
+            max-width: 600px;
+            width: 100%;
+            background: var(--paper);
+            position: relative;
+        }
+        .drill-strap {
+            position: absolute;
+            top: -12px;
+            left: 44px;
+            background: var(--paper);
+            padding: 0 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--red);
+            letter-spacing: 0.26em;
+        }
+        .drill-message {
+            font-size: 18px;
+            margin-bottom: 44px;
+        }
+        .buttons {
+            display: flex;
+            gap: 22px;
+            justify-content: center;
+        }
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--ink);
+            color: var(--ink);
+            padding: 12px 24px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.26em;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+        .reveal-section {
+            display: none;
+            margin-top: 44px;
+            border-top: 1px solid var(--hairline-thick);
+            padding-top: 22px;
+        }
+        .red-flag {
+            text-decoration: underline;
+            text-decoration-color: var(--red);
+            text-decoration-thickness: 2px;
+        }
+    </style>
+</head>
+<body class="grid-bg">
+    <div class="container">
+        <div class="drill-frame">
+            <div class="drill-strap">[KAVACH DRILL]</div>
+            
+            <div class="drill-message" id="messageText">
+                Dear customer, your bank account requires urgent verification. Click here: http://sbi-verify.example.invalid
+            </div>
+            
+            <div class="buttons" id="btnGroup">
+                <button class="btn-outline" onclick="reveal(false)">LOOKS REAL</button>
+                <button class="red" onclick="reveal(true)">SCAM</button>
+            </div>
+            
+            <div class="reveal-section" id="revealSection">
+                <div class="headline" style="font-size:32px; margin-bottom:12px;" id="revealTitle">IT'S A SCAM</div>
+                <div class="mono" style="margin-bottom:22px;">TACTIC: FAKE_KYC</div>
+                
+                <p>The highlighted parts are red flags:</p>
+                <p style="margin-top:12px; padding:12px; border-left:2px solid var(--red);">
+                    Dear customer, your bank account requires <span class="red-flag">urgent verification</span>. Click here: <span class="red-flag">http://sbi-verify.example.invalid</span>
+                </p>
+                
+                <div style="margin-top:44px; text-align:center;">
+                    <a href="#" class="mono red" style="text-decoration:none;">SHARE THIS DRILL</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/reveal.js"></script>
+    <script>
+        function reveal(guessedScam) {
+            document.getElementById('btnGroup').style.display = 'none';
+            const rev = document.getElementById('revealSection');
+            rev.style.display = 'block';
+            
+            const title = document.getElementById('revealTitle');
+            if(guessedScam) {
+                title.innerText = "CORRECT. IT'S A SCAM.";
+                title.style.color = "var(--red)";
+            } else {
+                title.innerText = "CAREFUL. IT'S A SCAM.";
+                title.style.color = "var(--ink)";
+            }
+        }
+    </script>
+</body>
+</html>

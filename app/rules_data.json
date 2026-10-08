@@ -1,0 +1,72 @@
+[
+  {
+    "id": "R001",
+    "name": "urgency_words",
+    "pattern": "\\b(urgent|immediately|action required|block|suspended|within 24 hours|expire|asap)\\b",
+    "weight": 0.3,
+    "description": "Urgency and pressure tactics"
+  },
+  {
+    "id": "R002",
+    "name": "threat_of_action",
+    "pattern": "\\b(arrest|legal action|police|fir|warrant|account blocked|disconnected|suspended)\\b",
+    "weight": 0.5,
+    "description": "Threat of block, arrest, or legal action"
+  },
+  {
+    "id": "R003",
+    "name": "asks_for_sensitive_info",
+    "pattern": "\\b(otp|pin|cvv|password|aadhaar|pan|kyc)\\b",
+    "weight": 0.4,
+    "description": "Asks for OTP, PIN, CVV, or identity docs"
+  },
+  {
+    "id": "R004",
+    "name": "remote_access_app",
+    "pattern": "\\b(anydesk|teamviewer|quicksupport|apk|download app)\\b",
+    "weight": 0.8,
+    "description": "Requests remote access app installation"
+  },
+  {
+    "id": "R005",
+    "name": "collect_request",
+    "pattern": "\\b(collect request|approve to receive|enter pin to receive|scan to receive)\\b",
+    "weight": 0.9,
+    "description": "UPI collect request scam pattern"
+  },
+  {
+    "id": "R006",
+    "name": "shortened_domain",
+    "pattern": "https?://(bit\\.ly|tinyurl\\.com|t\\.co|is\\.gd|rb\\.gy|goo\\.gl)/",
+    "weight": 0.4,
+    "description": "Shortened URL"
+  },
+  {
+    "id": "R007",
+    "name": "suspicious_tld",
+    "pattern": "\\.(top|xyz|club|live|online|loan|win|vip)\\b",
+    "weight": 0.4,
+    "description": "Suspicious TLD often used in scams"
+  },
+  {
+    "id": "R008",
+    "name": "fee_demand",
+    "pattern": "\\b(customs fee|clearance fee|registration fee|processing fee|tax|security deposit)\\b",
+    "weight": 0.6,
+    "description": "Payment demanded for prize, parcel, or job"
+  },
+  {
+    "id": "R009",
+    "name": "job_offer_lure",
+    "pattern": "\\b(part time job|earn daily|youtube videos|work from home|salary rs)\\b",
+    "weight": 0.7,
+    "description": "Task/Job scam lure"
+  },
+  {
+    "id": "R010",
+    "name": "lottery_prize_lure",
+    "pattern": "\\b(lottery|won|prize|lucky draw|selected|bonus)\\b",
+    "weight": 0.5,
+    "description": "Lottery or prize scam lure"
+  }
+]

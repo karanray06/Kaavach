@@ -1,0 +1,8 @@
+{
+  "ingest": 12,
+  "extract": 140,
+  "rules": 3,
+  "classify": 1200,
+  "explain": 0,
+  "store": 42
+}

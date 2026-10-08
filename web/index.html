@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kavach - Immune System for Scams</title>
+    <link rel="stylesheet" href="/static/tokens.css">
+    <style>
+        .container {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .hero {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 44px;
+            max-width: 1200px;
+        }
+        .huge-title {
+            font-size: clamp(60px, 15vw, 200px);
+            line-height: 0.85;
+            margin-bottom: 22px;
+        }
+        .nav {
+            display: flex;
+            gap: 22px;
+            padding: 44px;
+            border-bottom: 1px solid var(--hairline-thick);
+        }
+        .nav a {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            letter-spacing: 0.26em;
+            color: var(--ink);
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+        .nav a:hover {
+            color: var(--red);
+        }
+        .grid-blocks {
+            display: grid;
+            grid-template-columns: 1fr;
+            border-top: 2px solid var(--ink);
+        }
+        @media (min-width: 768px) {
+            .grid-blocks {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+        .block {
+            padding: 44px;
+            border-right: 1px solid var(--hairline-thick);
+            border-bottom: 1px solid var(--hairline-thick);
+        }
+    </style>
+</head>
+<body class="grid-bg">
+    <div class="container">
+        <div class="nav">
+            <a href="/scan">Scan</a>
+            <a href="/radar">Radar</a>
+            <a href="/drill">Drill</a>
+        </div>
+        
+        <div class="hero">
+            <div class="headline huge-title split-rev">KAVACH</div>
+            <div class="mono split-rev" style="font-size: 18px; letter-spacing: 0.1em; color: var(--grey); max-width: 600px;">
+                AN IMMUNE SYSTEM FOR MESSAGING SCAMS. BUILT WITH GOOGLE GEMINI AND SNOWFLAKE FOR THE DEVS FOR DEVS HACKATHON.
+            </div>
+            
+            <div style="margin-top: 44px;">
+                <button class="red" onclick="window.location.href='/scan'">LAUNCH SCANNER</button>
+            </div>
+        </div>
+        
+        <div class="grid-blocks">
+            <div class="block">
+                <div class="headline" style="font-size: 32px; margin-bottom: 12px;">SCAN</div>
+                <p>Advanced extraction and Gemini 4 classification scores messages and images for risk in under 3 seconds.</p>
+            </div>
+            <div class="block">
+                <div class="headline" style="font-size: 32px; margin-bottom: 12px;">RADAR</div>
+                <p>Snowflake powers real-time views of trending tactics, campaign growth, and cross-references with Cybersixgill dark web datasets.</p>
+            </div>
+            <div class="block">
+                <div class="headline" style="font-size: 32px; margin-bottom: 12px;">DNA</div>
+                <p>Every scam is fingerprinted using simhash clustering, mapping individual attacks to larger organized campaigns.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/reveal.js"></script>
+</body>
+</html>

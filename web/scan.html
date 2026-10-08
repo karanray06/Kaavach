@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kavach - Scan</title>
+    <link rel="stylesheet" href="/static/tokens.css">
+    <style>
+        .container {
+            display: grid;
+            grid-template-columns: 1fr;
+            min-height: 100vh;
+        }
+        @media (min-width: 768px) {
+            .container {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .panel {
+            padding: 44px;
+        }
+        .left-panel {
+            border-right: 1px solid var(--hairline-thick);
+            display: flex;
+            flex-direction: column;
+            gap: 22px;
+        }
+        .dropzone {
+            border: 2px solid var(--ink);
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--grey);
+            cursor: pointer;
+            position: relative;
+        }
+        .dropzone img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            border: 1px solid var(--hairline-thick);
+            background: transparent;
+            padding: 12px;
+            font-family: var(--font-archivo);
+            resize: none;
+        }
+        .lang-toggle {
+            display: flex;
+            gap: 12px;
+            font-family: var(--font-mono);
+            font-size: 11px;
+        }
+        .lang-toggle label {
+            cursor: pointer;
+        }
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 22px;
+        }
+        .timeline-row {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            color: var(--grey);
+        }
+        .timeline-row.active {
+            color: var(--red);
+        }
+        .result-panel {
+            display: none;
+            flex-direction: column;
+            gap: 22px;
+        }
+        .verdict-huge {
+            font-size: clamp(40px, 8vw, 80px);
+        }
+        .data-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+        }
+    </style>
+</head>
+<body class="grid-bg">
+    <div class="container">
+        <!-- Left Panel: Input -->
+        <div class="panel left-panel">
+            <div class="headline" style="font-size: 32px;">KAVACH <span style="color:var(--red)">SCAN</span></div>
+            <p class="mono" style="color: var(--grey);">YOUR MESSAGE IS SENT TO GOOGLE'S GEMINI API FOR ANALYSIS. KAVACH DOES NOT STORE IT.</p>
+            
+            <form id="scanForm">
+                <div class="dropzone" id="dropzone">
+                    <span id="dropText">DROP IMAGE OR CLICK</span>
+                    <input type="file" id="imageInput" accept="image/png, image/jpeg, image/webp" style="display:none;">
+                    <img id="imagePreview" src="">
+                </div>
+                
+                <textarea id="textInput" placeholder="Paste message text here..."></textarea>
+                
+                <div class="lang-toggle">
+                    <label><input type="radio" name="lang" value="en" checked> EN</label>
+                    <label><input type="radio" name="lang" value="hi"> हिं</label>
+                    <label><input type="radio" name="lang" value="bn"> বাং</label>
+                </div>
+                
+                <button type="submit" class="red" style="width: 100%;">ANALYSE</button>
+            </form>
+
+            <div class="timeline" id="timeline" style="display: none;">
+                <div class="timeline-row rule-row" id="stage-ingest"><span>INGEST</span><span class="status">PENDING</span></div>
+                <div class="timeline-row rule-row" id="stage-extract"><span>EXTRACT</span><span class="status">PENDING</span></div>
+                <div class="timeline-row rule-row" id="stage-rules"><span>SCORE</span><span class="status">PENDING</span></div>
+                <div class="timeline-row rule-row" id="stage-classify"><span>CLASSIFY</span><span class="status">PENDING</span></div>
+                <div class="timeline-row rule-row" id="stage-explain"><span>EXPLAIN</span><span class="status">PENDING</span></div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Results -->
+        <div class="panel" id="rightPanel">
+            <div class="result-panel" id="resultPanel">
+                <div class="headline verdict-huge" id="verdictText"></div>
+                
+                <div class="meter-bg">
+                    <div class="meter-fill" id="riskMeter" style="width: 0%;"></div>
+                </div>
+
+                <div class="rule-section" id="tacticsContainer">
+                    <div class="mono" style="margin: 12px 0;">DETECTED TACTICS</div>
+                    <!-- Tactics rows injected here -->
+                </div>
+
+                <div class="rule-section" id="indicatorsContainer">
+                    <div class="mono" style="margin: 12px 0;">INDICATORS</div>
+                    <!-- Indicators rows injected here -->
+                </div>
+
+                <div class="rule-section">
+                    <div class="mono" style="margin: 12px 0;">EXPLANATION</div>
+                    <p id="explanationText" class="split-rev"></p>
+                </div>
+
+                <div class="rule-section">
+                    <div class="mono" style="margin: 12px 0;">WHAT TO DO NOW</div>
+                    <ol id="actionsList" style="padding-left: 20px;"></ol>
+                </div>
+
+                <div class="rule-section mono" style="display:flex; justify-content:space-between; padding-top: 12px;">
+                    <span id="campaignStrap">CAMPAIGN --</span>
+                    <span id="modelStrap" style="color:var(--grey)">MODEL --</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/reveal.js"></script>
+    <script>
+        const dropzone = document.getElementById('dropzone');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const dropText = document.getElementById('dropText');
+
+        dropzone.addEventListener('click', () => imageInput.click());
+        
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                    dropText.style.display = 'none';
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+
+        document.getElementById('scanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const text = document.getElementById('textInput').value;
+            const file = imageInput.files[0];
+            const lang = document.querySelector('input[name="lang"]:checked').value;
+
+            if (!text && !file) {
+                alert("Please provide text or an image.");
+                return;
+            }
+
+            // Show timeline
+            document.getElementById('timeline').style.display = 'flex';
+            document.getElementById('resultPanel').style.display = 'none';
+            
+            const stages = ['ingest', 'extract', 'rules', 'classify', 'explain'];
+            let currentStageIdx = 0;
+            
+            // Fake progression for the timeline while waiting for fetch
+            const progressInterval = setInterval(() => {
+                if (currentStageIdx < stages.length) {
+                    const row = document.getElementById(`stage-${stages[currentStageIdx]}`);
+                    row.classList.add('active');
+                    row.querySelector('.status').innerText = 'DONE';
+                    currentStageIdx++;
+                }
+            }, 800);
+
+            const formData = new FormData();
+            if (text) formData.append('text', text);
+            if (file) formData.append('image', file);
+            formData.append('lang', lang);
+
+            try {
+                const response = await fetch('/api/scan', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await response.json();
+                
+                clearInterval(progressInterval);
+                // Mark all done
+                stages.forEach(s => {
+                    const row = document.getElementById(`stage-${s}`);
+                    row.classList.add('active');
+                    row.querySelector('.status').innerText = 'DONE';
+                });
+
+                showResults(data);
+            } catch (err) {
+                clearInterval(progressInterval);
+                alert("Error during scan");
+            }
+        });
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        function showResults(data) {
+            document.getElementById('resultPanel').style.display = 'flex';
+            
+            const vText = document.getElementById('verdictText');
+            vText.innerText = data.verdict.replace('_', ' ');
+            if (data.verdict === 'LIKELY_SCAM') vText.style.color = 'var(--red)';
+            else if (data.verdict === 'NO_RED_FLAGS') vText.style.color = 'var(--ink)';
+            else vText.style.color = 'var(--grey)';
+
+            document.getElementById('riskMeter').style.width = `${Math.min(Math.max(data.risk_score * 100, 0), 100)}%`;
+
+            // Tactics
+            const tCont = document.getElementById('tacticsContainer');
+            tCont.innerHTML = '<div class="mono" style="margin: 12px 0;">DETECTED TACTICS</div>';
+            if (data.tactics && Array.isArray(data.tactics)) {
+                data.tactics.forEach(t => {
+                    tCont.innerHTML += `<div class="data-row rule-row"><span class="headline">${escapeHtml(t.code || '')}</span><span class="mono">${escapeHtml(t.evidence || '')}</span></div>`;
+                });
+            }
+
+            // Indicators
+            const iCont = document.getElementById('indicatorsContainer');
+            iCont.innerHTML = '<div class="mono" style="margin: 12px 0;">INDICATORS</div>';
+            if (data.indicators && Array.isArray(data.indicators)) {
+                data.indicators.forEach(i => {
+                    iCont.innerHTML += `<div class="data-row rule-row"><span class="mono">${escapeHtml(i.display || '')}</span><span class="mono red">SEEN ${escapeHtml(String(i.seen_before || 0))} TIMES</span></div>`;
+                });
+            }
+
+            // Explanation
+            const exp = document.getElementById('explanationText');
+            exp.innerText = data.explanation || '';
+            // Set font if hindi or bengali
+            if (data.lang === 'hi') exp.style.fontFamily = 'var(--font-hi)';
+            else if (data.lang === 'bn') exp.style.fontFamily = 'var(--font-bn)';
+            else exp.style.fontFamily = 'var(--font-archivo)';
+
+            // Actions
+            const aList = document.getElementById('actionsList');
+            aList.innerHTML = '';
+            if (data.actions && Array.isArray(data.actions)) {
+                data.actions.forEach(a => {
+                    aList.innerHTML += `<li>${escapeHtml(a)}</li>`;
+                });
+            }
+
+            document.getElementById('campaignStrap').innerText = `CAMPAIGN ${data.campaign.id}, VARIANT ${data.campaign.variant_no}`;
+            document.getElementById('modelStrap').innerText = `MODEL ${data.model}`;
+            
+            // Trigger reveal animations manually
+            setTimeout(() => {
+                document.querySelectorAll('.split-rev span, [data-rev]').forEach(el => {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                });
+            }, 100);
+        }
+    </script>
+</body>
+</html>

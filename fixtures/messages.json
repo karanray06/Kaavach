@@ -1,0 +1,98 @@
+[
+  {
+    "id": "scam_en_1",
+    "type": "scam",
+    "lang": "en",
+    "text": "URGENT: Your bank account will be blocked today due to incomplete KYC. Please click here to update your PAN immediately: http://sbi-kyc-update.example.invalid or call 9876543210."
+  },
+  {
+    "id": "scam_en_2",
+    "type": "scam",
+    "lang": "en",
+    "text": "Dear customer, your parcel is held at customs. Please pay the clearance fee of Rs 45.00 via UPI to customs-india@fakeupi to receive your package."
+  },
+  {
+    "id": "scam_en_3",
+    "type": "scam",
+    "lang": "en",
+    "text": "You have been selected for a part time job! Earn Rs 2000-5000 daily by liking YouTube videos. Contact us on WhatsApp: +919999988888"
+  },
+  {
+    "id": "scam_en_4",
+    "type": "scam",
+    "lang": "en",
+    "text": "Your electricity connection will be disconnected tonight at 9:30 PM. Please call our officer immediately to pay your pending bill."
+  },
+  {
+    "id": "scam_hi_1",
+    "type": "scam",
+    "lang": "hi",
+    "text": "ज़रूरी सूचना: आपका बैंक खाता आज ब्लॉक हो जाएगा। कृपया अपना पैन कार्ड तुरंत अपडेट करें: http://kyc-update.example.invalid"
+  },
+  {
+    "id": "scam_hi_2",
+    "type": "scam",
+    "lang": "hi",
+    "text": "बधाई हो! आपने 25,00,000 रुपये की लॉटरी जीती है। अपनी राशि प्राप्त करने के लिए कृपया 5000 रुपये का टैक्स refund-desk@fakeupi पर भेजें।"
+  },
+  {
+    "id": "scam_hi_3",
+    "type": "scam",
+    "lang": "hi",
+    "text": "आपका बिजली कनेक्शन रात 9 बजे काट दिया जाएगा। पिछले महीने का बिल बकाया है। तुरंत इस नंबर पर संपर्क करें: 9876500000"
+  },
+  {
+    "id": "scam_hi_4",
+    "type": "scam",
+    "lang": "hi",
+    "text": "घर बैठे पैसे कमाएं! हर दिन 3000 रुपये कमाएं सिर्फ वीडियो लाइक करके। अभी हमसे व्हाट्सएप पर जुड़ें।"
+  },
+  {
+    "id": "scam_bn_1",
+    "type": "scam",
+    "lang": "bn",
+    "text": "জরুরী: অসম্পূর্ণ KYC-এর কারণে আপনার ব্যাঙ্ক অ্যাকাউন্ট আজ ব্লক করা হবে। অনুগ্রহ করে অবিলম্বে আপনার প্যান আপডেট করতে এখানে ক্লিক করুন: http://kyc-update.example.invalid"
+  },
+  {
+    "id": "scam_bn_2",
+    "type": "scam",
+    "lang": "bn",
+    "text": "প্রিয় গ্রাহক, আপনার পার্সেল কাস্টমসে আটকে আছে। আপনার প্যাকেজ পেতে অনুগ্রহ করে 45.00 টাকা কাস্টমস ফি customs-india@fakeupi-এ প্রদান করুন।"
+  },
+  {
+    "id": "scam_bn_3",
+    "type": "scam",
+    "lang": "bn",
+    "text": "আপনি পার্ট টাইম কাজের জন্য নির্বাচিত হয়েছেন! ইউটিউব ভিডিও লাইক করে প্রতিদিন 2000-5000 টাকা উপার্জন করুন।"
+  },
+  {
+    "id": "scam_bn_4",
+    "type": "scam",
+    "lang": "bn",
+    "text": "আপনার বিদ্যুৎ সংযোগ আজ রাত ৯টায় বিচ্ছিন্ন করা হবে। বকেয়া বিল পরিশোধ করতে অবিলম্বে আমাদের অফিসারের সাথে যোগাযোগ করুন।"
+  },
+  {
+    "id": "benign_en_1",
+    "type": "benign",
+    "lang": "en",
+    "text": "Your OTP for XYZ Bank login is 123456. Do not share this with anyone. Valid for 10 minutes."
+  },
+  {
+    "id": "benign_en_2",
+    "type": "benign",
+    "lang": "en",
+    "text": "Hi Rahul, are we still meeting for lunch at 1 PM tomorrow? Let me know."
+  },
+  {
+    "id": "benign_hi_1",
+    "type": "benign",
+    "lang": "hi",
+    "text": "आपका अमेज़न पैकेज आउट फॉर डिलीवरी है। डिलीवरी एजेंट जल्द ही आपसे संपर्क करेगा।"
+  },
+  {
+    "id": "benign_bn_1",
+    "type": "benign",
+    "lang": "bn",
+    "text": "শুভ নববর্ষ! আশা করি নতুন বছরটি আপনার জন্য আনন্দ এবং সাফল্য নিয়ে আসবে।"
+  }
+]

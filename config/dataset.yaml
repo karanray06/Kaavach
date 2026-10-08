@@ -1,0 +1,6 @@
+dataset:
+  name: "Deep and Darkweb Malware Insights - Sample"
+  provider: "Cybersixgill"
+  database: "DARKFEED"
+  view: "MALWARE_INSIGHTS_VIEW"
+  description: "Automate malware research and IOCs blacklisting based on malware listed on dark web file-sharing sites and marketplaces."
