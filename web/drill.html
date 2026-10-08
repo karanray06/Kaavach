@@ -76,8 +76,8 @@
             </div>
             
             <div class="buttons" id="btnGroup">
-                <button class="btn-outline" onclick="reveal(false)">LOOKS REAL</button>
-                <button class="red" onclick="reveal(true)">SCAM</button>
+                <button class="btn-outline" onclick="drillReveal(false)">LOOKS REAL</button>
+                <button class="red" onclick="drillReveal(true)">SCAM</button>
             </div>
             
             <div class="reveal-section" id="revealSection">
@@ -96,22 +96,7 @@
         </div>
     </div>
 
-    <script src="/static/reveal.js"></script>
-    <script>
-        function reveal(guessedScam) {
-            document.getElementById('btnGroup').style.display = 'none';
-            const rev = document.getElementById('revealSection');
-            rev.style.display = 'block';
-            
-            const title = document.getElementById('revealTitle');
-            if(guessedScam) {
-                title.innerText = "CORRECT. IT'S A SCAM.";
-                title.style.color = "var(--red)";
-            } else {
-                title.innerText = "CAREFUL. IT'S A SCAM.";
-                title.style.color = "var(--ink)";
-            }
-        }
-    </script>
+    <script src="/static/dist/reveal.js"></script>
+    <script src="/static/dist/drill.js"></script>
 </body>
 </html>

@@ -1,0 +1,26 @@
+{
+  "name": "kaavach",
+  "version": "1.0.0",
+  "description": "An open-source AI scam triage and community early-warning system, powered by **Gemma 4** (via the Gemini API) and **Snowflake**.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/karanray06/Kaavach.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/karanray06/Kaavach/issues"
+  },
+  "homepage": "https://github.com/karanray06/Kaavach#readme",
+  "devDependencies": {
+    "typescript": "^7.0.2"
+  }
+}

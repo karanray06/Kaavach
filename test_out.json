@@ -1,0 +1,59 @@
+{
+  "scan_id": "ed69a13f-9a7a-4b4f-af1e-2d1660b80f8e",
+  "verdict": "LIKELY_SCAM",
+  "risk_score": 0.76324130209373,
+  "confidence": 1.0,
+  "tactics": [
+    {
+      "code": "URGENCY",
+      "evidence": "Update KYC immediately"
+    },
+    {
+      "code": "FAKE_KYC",
+      "evidence": "Update KYC immediately at http://sbi-kyc.example.invalid"
+    },
+    {
+      "code": "PHISHING_LINK",
+      "evidence": "http://sbi-kyc.example.invalid"
+    },
+    {
+      "code": "SENSITIVE_DATA_REQUEST",
+      "evidence": "Send OTP to verify"
+    }
+  ],
+  "indicators": [
+    {
+      "type": "url",
+      "display": "htt***",
+      "seen_before": 0
+    },
+    {
+      "type": "domain",
+      "display": "sbi***",
+      "seen_before": 1
+    }
+  ],
+  "explanation": "The message uses high urgency and a fake KYC update request to trick the user into visiting a phishing link and sharing an OTP. This is a classic banking phishing scam.",
+  "actions": [
+    "Do not click the link.",
+    "Do not share your OTP with anyone.",
+    "Contact your official SBI bank branch directly through their official website or app.",
+    "Report the message as spam to your service provider."
+  ],
+  "campaign": {
+    "id": "C-0001",
+    "variant_no": 1,
+    "first_seen": "2026-10-08T11:49:04.020112",
+    "variants": 1
+  },
+  "lang": "en",
+  "timings_ms": {
+    "ingest": 0,
+    "extract": 0,
+    "rules": 0,
+    "classify": 7900,
+    "explain": 0,
+    "store": 0
+  },
+  "model": "gemma-4-26b-a4b-it"
+}
