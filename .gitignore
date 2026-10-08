@@ -13,3 +13,5 @@ env/
 # Data/Scans
 fixtures/images/
 *.log
+
+.env

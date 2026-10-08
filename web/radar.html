@@ -13,7 +13,7 @@
         }
         @media (min-width: 1024px) {
             .container {
-                grid-template-columns: 300px 1fr 300px;
+                grid-template-columns: 320px 1fr 320px;
             }
         }
         .panel {
@@ -33,15 +33,40 @@
             align-items: center;
             justify-content: space-between;
             margin: 8px 0;
+            gap: 8px;
         }
         .bar-container {
-            width: 60%;
+            flex-grow: 1;
             height: 6px;
             background: var(--hairline-thin);
+            margin: 0 10px;
         }
         .bar-fill {
             height: 100%;
             background: var(--red);
+            transition: width 0.5s ease;
+        }
+        .nlq-container {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            padding: 22px;
+            background: var(--paper);
+            border-top: 2px solid var(--ink);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 100;
+        }
+        .nlq-row {
+            display: flex;
+            gap: 12px;
+        }
+        .nlq-response {
+            font-family: var(--font-mono);
+            font-size: 11px;
+            color: var(--red);
+            display: none;
         }
     </style>
 </head>
@@ -50,21 +75,10 @@
         <!-- Left Panel: Trends -->
         <div class="panel">
             <div class="headline" style="font-size: 32px;">TRENDS</div>
-            <div class="mono" style="color:var(--grey)">LAST 7 DAYS</div>
+            <div class="mono" id="trendsSource" style="color:var(--grey)">LOADING DATA...</div>
             
             <div id="trendsList" class="rule-section" style="padding-top:22px;">
-                <!-- Stub for now -->
-                <div class="bar-row">
-                    <span class="headline" style="font-size: 18px;">FAKE_KYC</span>
-                    <div class="bar-container"><div class="bar-fill" style="width: 80%;"></div></div>
-                    <span class="mono red">+12%</span>
-                </div>
-                <div class="bar-row">
-                    <span class="headline" style="font-size: 18px;">OTP_THEFT</span>
-                    <div class="bar-container"><div class="bar-fill" style="width: 40%;"></div></div>
-                    <span class="mono red">+4%</span>
-                </div>
-                <div class="mono" style="margin-top: 12px; color:var(--grey)">DEMO DATA</div>
+                <div class="mono" style="color:var(--grey)">FETCHING TRENDS...</div>
             </div>
         </div>
 
@@ -77,46 +91,134 @@
         <!-- Right Panel: Recent -->
         <div class="panel" style="border-right: none;">
             <div class="headline" style="font-size: 32px;">RECENT</div>
-            <div class="mono" style="color:var(--grey)">ACTIVE CAMPAIGNS</div>
+            <div class="mono" id="campaignsSource" style="color:var(--grey)">ACTIVE CAMPAIGNS</div>
             
-            <div class="rule-section" style="padding-top:22px;">
-                <div class="data-row rule-row">
-                    <span class="mono">C-0042</span>
-                    <span class="mono">14 VARIANTS</span>
-                </div>
-                <div class="data-row rule-row">
-                    <span class="mono">C-0041</span>
-                    <span class="mono">3 VARIANTS</span>
-                </div>
-                <div class="mono" style="margin-top: 12px; color:var(--grey)">DEMO DATA</div>
+            <div id="campaignsList" class="rule-section" style="padding-top:22px;">
+                <div class="mono" style="color:var(--grey)">FETCHING CAMPAIGNS...</div>
             </div>
         </div>
     </div>
     
-    <!-- Optional NLQ -->
-    <div style="position:fixed; bottom:0; width:100%; padding:22px; background:var(--paper); border-top:2px solid var(--ink); display:flex; gap:12px;">
-        <span class="mono" style="align-self:center;">ASK DATA:</span>
-        <input type="text" placeholder="e.g. How many KYC scams today?" style="flex-grow:1; padding:12px; border:1px solid var(--ink); background:transparent; font-family:var(--font-archivo);">
-        <button class="red">QUERY</button>
+    <!-- Wired NLQ / Query Bar -->
+    <div class="nlq-container">
+        <div class="nlq-response" id="queryResponse"></div>
+        <div class="nlq-row">
+            <span class="mono" style="align-self:center;">ASK DATA:</span>
+            <input type="text" id="queryInput" placeholder="e.g. KYC, C-0042, or active tactics" style="flex-grow:1; padding:12px; border:1px solid var(--ink); background:transparent; font-family:var(--font-archivo);">
+            <button class="red" id="queryBtn">QUERY</button>
+        </div>
     </div>
 
     <script src="/static/reveal.js"></script>
     <script>
-        // Draw simple dummy graph
+        let cachedTrends = [];
+        let cachedCampaigns = [];
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        async function loadTrends() {
+            const container = document.getElementById('trendsList');
+            const sourceEl = document.getElementById('trendsSource');
+            try {
+                const res = await fetch('/api/trends');
+                const data = await res.json();
+                cachedTrends = data.trends || [];
+                sourceEl.innerText = data.source === 'snowflake' ? 'SNOWFLAKE LIVE' : 'MEMORY CACHE';
+                
+                if (cachedTrends.length === 0) {
+                    container.innerHTML = '<div class="mono" style="color:var(--grey)">NO TRENDING DATA YET</div>';
+                    return;
+                }
+
+                const maxCount = Math.max(...cachedTrends.map(t => t.count || 1), 1);
+                container.innerHTML = cachedTrends.map(t => {
+                    const pct = Math.min(Math.round((t.count / maxCount) * 100), 100);
+                    const deltaStr = t.delta !== undefined ? (t.delta >= 0 ? `+${t.delta}%` : `${t.delta}%`) : `${t.count} hits`;
+                    return `
+                        <div class="bar-row">
+                            <span class="headline" style="font-size: 16px;">${escapeHtml(t.tactic || 'UNKNOWN')}</span>
+                            <div class="bar-container"><div class="bar-fill" style="width: ${pct}%;"></div></div>
+                            <span class="mono red">${escapeHtml(deltaStr)}</span>
+                        </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                container.innerHTML = '<div class="mono red">FAILED TO LOAD TRENDS</div>';
+            }
+        }
+
+        async function loadCampaigns() {
+            const container = document.getElementById('campaignsList');
+            const sourceEl = document.getElementById('campaignsSource');
+            try {
+                const res = await fetch('/api/campaigns');
+                const data = await res.json();
+                cachedCampaigns = data.campaigns || [];
+                sourceEl.innerText = data.source === 'snowflake' ? 'SNOWFLAKE ACTIVE' : 'ACTIVE CAMPAIGNS';
+
+                if (cachedCampaigns.length === 0) {
+                    container.innerHTML = '<div class="mono" style="color:var(--grey)">NO CAMPAIGNS RECORDED</div>';
+                    return;
+                }
+
+                container.innerHTML = cachedCampaigns.map(c => `
+                    <div class="data-row rule-row" style="display:flex; justify-content:space-between; padding:8px 0;">
+                        <span class="mono">${escapeHtml(c.campaign_id || '')}</span>
+                        <span class="mono red">${escapeHtml(String(c.variant_count || 1))} VARIANTS</span>
+                    </div>
+                `).join('');
+            } catch (err) {
+                container.innerHTML = '<div class="mono red">FAILED TO LOAD CAMPAIGNS</div>';
+            }
+        }
+
+        function handleQuery() {
+            const input = document.getElementById('queryInput');
+            const resp = document.getElementById('queryResponse');
+            const q = input.value.trim().toLowerCase();
+            if (!q) {
+                resp.style.display = 'none';
+                return;
+            }
+
+            resp.style.display = 'block';
+            const matchedTrend = cachedTrends.find(t => t.tactic && t.tactic.toLowerCase().includes(q));
+            const matchedCamp = cachedCampaigns.find(c => (c.campaign_id && c.campaign_id.toLowerCase().includes(q)) || (c.primary_tactic && c.primary_tactic.toLowerCase().includes(q)));
+
+            if (matchedTrend) {
+                resp.innerText = `QUERY RESULT: Tactic ${matchedTrend.tactic} observed with ${matchedTrend.count} recorded scans.`;
+            } else if (matchedCamp) {
+                resp.innerText = `QUERY RESULT: Campaign ${matchedCamp.campaign_id} (${matchedCamp.primary_tactic}) has ${matchedCamp.variant_count} tracked variants.`;
+            } else {
+                resp.innerText = `QUERY RESULT: No direct record matching "${input.value}". Monitored tactics: ${cachedTrends.map(t => t.tactic).join(', ') || 'None'}.`;
+            }
+        }
+
+        document.getElementById('queryBtn').addEventListener('click', handleQuery);
+        document.getElementById('queryInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleQuery();
+        });
+
+        // Initialize fetches
+        loadTrends();
+        loadCampaigns();
+
+        // Draw graph nodes
         const canvas = document.getElementById('campaignGraph');
         const ctx = canvas.getContext('2d');
         canvas.width = canvas.parentElement.clientWidth;
         canvas.height = canvas.parentElement.clientHeight;
-        
         const w = canvas.width;
         const h = canvas.height;
-        
         ctx.fillStyle = 'rgba(17,16,16,0.16)';
         for(let i=0; i<30; i++){
             ctx.beginPath();
             ctx.arc(Math.random()*w, Math.random()*h, Math.random()*15+5, 0, Math.PI*2);
             ctx.fill();
-            
             if(i>0) {
                 ctx.beginPath();
                 ctx.moveTo(Math.random()*w, Math.random()*h);

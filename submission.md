@@ -21,7 +21,7 @@ Kavach solves this through a five-loop architecture:
 - **Frontend**: Vanilla HTML/CSS/JS (Swiss Poster Design System)
 
 ## How We Used Gemma 4 (Best Use of Gemma 4 Track)
-We integrated Google's Generative AI via the `google-genai` SDK using `gemini-3.1-pro-preview` (standing in for the Gemma 4 / Gemini API structured outputs). 
+We integrated Google's Generative AI via the `google-genai` SDK using `gemini-3.8-flash` (standing in for the Gemma 4 / Gemini API structured outputs). 
 Gemma handles the hardest part of the pipeline: unstructured, adversarial text. It uses structured JSON output (`response_schema`) to bypass brittle regex and extract a unified schema containing a confidence score, the specific social engineering tactics used, and a clear, short explanation for the user.
 
 ## How We Used Snowflake (Best Open-Source AI with Snowflake Track)
