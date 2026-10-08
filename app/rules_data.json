@@ -2,35 +2,35 @@
   {
     "id": "R001",
     "name": "urgency_words",
-    "pattern": "\\b(urgent|immediately|action required|block|suspended|within 24 hours|expire|asap)\\b",
-    "weight": 0.3,
+    "pattern": "\\b(urgent|immediately|action required|within 24 hours|expire|asap|turant|foran|jaldi karo|seghroi|tatkal|shighroi)\\b|तुरंत|तत्काल|जल्दी करो|ফৌরান|শীঘ্রই|এখনই",
+    "weight": 0.25,
     "description": "Urgency and pressure tactics"
   },
   {
     "id": "R002",
     "name": "threat_of_action",
-    "pattern": "\\b(arrest|legal action|police|fir|warrant|account blocked|disconnected|suspended)\\b",
-    "weight": 0.5,
+    "pattern": "\\b(arrest|legal action|fir|warrant|account blocked|disconnected|suspended|giraftar|band|mukaddma)\\b|गिरफ़्तार|कानूनी कार्रवाई|ব্যাংক অ্যাকাউন্ট|গ্রেফতার|ব্লক",
+    "weight": 0.4,
     "description": "Threat of block, arrest, or legal action"
   },
   {
     "id": "R003",
     "name": "asks_for_sensitive_info",
-    "pattern": "\\b(otp|pin|cvv|password|aadhaar|pan|kyc)\\b",
+    "pattern": "\\b(otp|pin|cvv|password|aadhaar|pan|kyc)\\b|ওটিপি|পিন|কেওয়াইসি|ओटीपी|पिन|केवाईसी|আধার|আধার কার্ড",
     "weight": 0.4,
     "description": "Asks for OTP, PIN, CVV, or identity docs"
   },
   {
     "id": "R004",
     "name": "remote_access_app",
-    "pattern": "\\b(anydesk|teamviewer|quicksupport|apk|download app)\\b",
+    "pattern": "\\b(anydesk|teamviewer|quicksupport|apk|download app)\\b|ডাউনলোড করুন|डाउनलोड करें",
     "weight": 0.8,
     "description": "Requests remote access app installation"
   },
   {
     "id": "R005",
     "name": "collect_request",
-    "pattern": "\\b(collect request|approve to receive|enter pin to receive|scan to receive)\\b",
+    "pattern": "\\b(collect request|approve to receive|enter pin to receive|scan to receive)\\b|পিন দিয়ে গ্রহণ করুন|पिन डालकर प्राप्त करें",
     "weight": 0.9,
     "description": "UPI collect request scam pattern"
   },
@@ -51,22 +51,36 @@
   {
     "id": "R008",
     "name": "fee_demand",
-    "pattern": "\\b(customs fee|clearance fee|registration fee|processing fee|tax|security deposit)\\b",
+    "pattern": "\\b(customs fee|clearance fee|registration fee|processing fee|security deposit|customs duty)\\b|কাস্টমস ফি|সিকিউরিটি ডিপোজিট|रजिस्ट्रेशन फीस|कस्टम ड्यूटी|प्रोसेसिंग फीस",
     "weight": 0.6,
     "description": "Payment demanded for prize, parcel, or job"
   },
   {
     "id": "R009",
     "name": "job_offer_lure",
-    "pattern": "\\b(part time job|earn daily|youtube videos|work from home|salary rs)\\b",
+    "pattern": "\\b(part time job|earn daily|youtube videos|work from home|salary rs|daily kamai|ghar baithe)\\b|पार्ट टाइम|दैनिक कमाई|घर बैठे|পার্ট টাইম|ঘরে বসে|দৈনিক আয়",
     "weight": 0.7,
     "description": "Task/Job scam lure"
   },
   {
     "id": "R010",
     "name": "lottery_prize_lure",
-    "pattern": "\\b(lottery|won|prize|lucky draw|selected|bonus)\\b",
-    "weight": 0.5,
+    "pattern": "\\b(lottery|lucky draw|prize money|congratulations you won|selected for a reward)\\b|লটারি|লাকি ড্র|পুরস্কার|लॉटरी|लकी ड्रा|पुरस्कार|बधाई",
+    "weight": 0.45,
     "description": "Lottery or prize scam lure"
+  },
+  {
+    "id": "R011",
+    "name": "digital_arrest",
+    "pattern": "\\b(digital arrest|cyber police|cyber crime|narcotics|courier parcel)\\b|ডিজিটাল অ্যারেস্ট|সাইবার পুলিশ|নারকোটিক্স|डिजिटल अरेस्ट|साइबर पुलिस|नारकोटिक्स",
+    "weight": 0.7,
+    "description": "Digital arrest / impersonation scam"
+  },
+  {
+    "id": "R012",
+    "name": "account_kyc_block",
+    "pattern": "\\b(account will be blocked|kyc update|verify your account|pan link|aadhaar link|link expired)\\b|অ্যাকাউন্ট ব্লক|কেওয়াইসी আপডেট|অ্যাকাউন্ট যাচাই|खाता ब्लॉक|केवाईसी अपडेट|खाता सत्यापित",
+    "weight": 0.5,
+    "description": "Fake KYC or account block"
   }
 ]

@@ -1,0 +1,50 @@
+{
+  "scan_id": "ed271b94-268b-4ca0-9685-f206b3fb9514",
+  "verdict": "LIKELY_SCAM",
+  "risk_score": 0.9099999999999999,
+  "confidence": 1.0,
+  "tactics": [
+    {
+      "code": "URGENCY",
+      "evidence": "Update KYC immediately"
+    },
+    {
+      "code": "FAKE_KYC",
+      "evidence": "Your SBI account is blocked!"
+    }
+  ],
+  "indicators": [
+    {
+      "type": "url",
+      "display": "htt***",
+      "seen_before": 0
+    },
+    {
+      "type": "domain",
+      "display": "exa***",
+      "seen_before": 1
+    }
+  ],
+  "explanation": "এই মেসেজটি একটি স্ক্যাম হওয়ার প্রবল সম্ভাবনা রয়েছে কারণ এটি ব্যবহারকারীকে আতঙ্কিত করে দ্রুত KYC আপডেট করার জন্য একটি সন্দেহজনক লিঙ্কে ক্লিক করতে বাধ্য করছে। এটি ব্যাংকিং প্রতারণার একটি সাধারণ পদ্ধতি।",
+  "actions": [
+    "সন্দেহজনক লিঙ্কে ক্লিক করবেন না।",
+    "আপনার ব্যাংকের অফিসিয়াল অ্যাপ বা ওয়েবসাইট ব্যবহার করে অ্যাকাউন্ট স্ট্যাটাস চেক করুন।",
+    "কোনো অবস্থাতেই আপনার ব্যক্তিগত বা ব্যাংকিং তথ্য শেয়ার করবেন না।"
+  ],
+  "campaign": {
+    "id": "C-0001",
+    "variant_no": 2,
+    "first_seen": "2026-10-08T10:39:19.478081",
+    "variants": 2
+  },
+  "lang": "bn",
+  "timings_ms": {
+    "ingest": 0,
+    "extract": 0,
+    "rules": 0,
+    "classify": 6585,
+    "explain": 0,
+    "store": 0
+  },
+  "model": "gemma-4-26b-a4b-it"
+}

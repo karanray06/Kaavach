@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kavach - Scan</title>
     <link rel="stylesheet" href="/static/tokens.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
     <style>
         .container {
             display: grid;
@@ -99,7 +101,7 @@
         <!-- Left Panel: Input -->
         <div class="panel left-panel">
             <div class="headline" style="font-size: 32px;">KAVACH <span style="color:var(--red)">SCAN</span></div>
-            <p class="mono" style="color: var(--grey);">YOUR MESSAGE IS SENT TO GOOGLE'S GEMINI API FOR ANALYSIS. KAVACH DOES NOT STORE IT.</p>
+            <p class="mono" style="color: var(--grey);">YOUR MESSAGE IS SENT TO GOOGLE'S GEMINI API (HOSTING GEMMA 4) FOR ANALYSIS. KAVACH DOES NOT STORE IT.</p>
             
             <form id="scanForm">
                 <div class="dropzone" id="dropzone">
@@ -252,8 +254,10 @@
             document.getElementById('resultPanel').style.display = 'flex';
             
             const vText = document.getElementById('verdictText');
-            vText.innerText = data.verdict.replace('_', ' ');
+            const verdictDisplay = data.verdict === 'NO_RED_FLAGS' ? 'NO RED FLAGS FOUND' : data.verdict.replace(/_/g, ' ');
+            vText.innerText = verdictDisplay;
             if (data.verdict === 'LIKELY_SCAM') vText.style.color = 'var(--red)';
+            else if (data.verdict === 'COULD_NOT_ASSESS') vText.style.color = 'var(--grey)';
             else if (data.verdict === 'NO_RED_FLAGS') vText.style.color = 'var(--ink)';
             else vText.style.color = 'var(--grey)';
 
@@ -294,7 +298,11 @@
                 });
             }
 
-            document.getElementById('campaignStrap').innerText = `CAMPAIGN ${data.campaign.id}, VARIANT ${data.campaign.variant_no}`;
+            if (data.campaign) {
+                document.getElementById('campaignStrap').innerText = `CAMPAIGN ${data.campaign.id}, VARIANT ${data.campaign.variant_no}`;
+            } else {
+                document.getElementById('campaignStrap').innerText = '';
+            }
             document.getElementById('modelStrap').innerText = `MODEL ${data.model}`;
             
             // Trigger reveal animations manually

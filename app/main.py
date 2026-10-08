@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import os
 import logging
 from typing import Optional
@@ -13,6 +14,18 @@ from slowapi.middleware import SlowAPIMiddleware
 from app.config import GEMINI_MODEL_ID
 from app.pipeline import run_scan, MEMORY_STORE, MEMORY_STORE_LOCK
 from app.snow import check_health, get_trending_tactics, get_recent_campaigns
+=======
+from fastapi import FastAPI, Form, UploadFile, File, Request
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+import os
+from dotenv import load_dotenv
+import datetime
+import hashlib
+from typing import Optional
+from app.pipeline import run_scan
+from app.snow import check_health
+>>>>>>> 1f31c34 (Phase 0: Gemma 4, fail-closed, multilingual rules, poisoning fix)
 
 load_dotenv()
 logger = logging.getLogger("kavach.main")
@@ -61,7 +74,11 @@ async def health_check():
     snowflake_status = check_health()
     return JSONResponse(content={
         "status": "ok",
+<<<<<<< HEAD
         "model": GEMINI_MODEL_ID,
+=======
+        "model": os.environ.get("GEMINI_MODEL_ID", "gemma-4-26b-a4b-it"),
+>>>>>>> 1f31c34 (Phase 0: Gemma 4, fail-closed, multilingual rules, poisoning fix)
         "snowflake": snowflake_status,
         "dataset": "stub_dataset"
     })
@@ -117,7 +134,10 @@ async def api_campaigns():
 @limiter.limit("20/minute")
 async def scan(
     request: Request,
+<<<<<<< HEAD
     background_tasks: BackgroundTasks,
+=======
+>>>>>>> 1f31c34 (Phase 0: Gemma 4, fail-closed, multilingual rules, poisoning fix)
     text: Optional[str] = Form(None),
     image: Optional[UploadFile] = File(None),
     lang: str = Form("en")
@@ -151,6 +171,7 @@ async def scan(
     # If there's neither text nor image, reject with 400
     if not text and not image_bytes:
         return JSONResponse(status_code=400, content={"error": "Must provide either text or image"})
+<<<<<<< HEAD
 
     result = run_scan(
         text=text or "",
@@ -159,4 +180,14 @@ async def scan(
         lang=lang,
         background_tasks=background_tasks
     )
+=======
+        
+    today_salt = datetime.datetime.now().strftime("%Y-%m-%d")
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("user-agent", "unknown")
+    raw = f"{client_ip}:{user_agent}:{today_salt}"
+    client_id = hashlib.sha256(raw.encode()).hexdigest()
+
+    result = run_scan(text or "", image_bytes=image_bytes, lang=lang, client_id=client_id)
+>>>>>>> 1f31c34 (Phase 0: Gemma 4, fail-closed, multilingual rules, poisoning fix)
     return JSONResponse(content=result)
