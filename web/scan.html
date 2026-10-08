@@ -5,175 +5,217 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kavach - Scan</title>
     <link rel="stylesheet" href="/static/tokens.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali&family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
     <style>
-        .container {
-            display: grid;
-            grid-template-columns: 1fr;
-            min-height: 100vh;
-        }
-        @media (min-width: 768px) {
-            .container {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-        .panel {
-            padding: 44px;
-        }
-        .left-panel {
-            border-right: 1px solid var(--hairline-thick);
-            display: flex;
-            flex-direction: column;
-            gap: 22px;
+        .page-header {
+            text-align: center;
+            margin: 64px 0 40px 0;
         }
         .dropzone {
-            border: 2px solid var(--ink);
-            aspect-ratio: 1;
+            border: 1px solid var(--grid);
+            aspect-ratio: 2/1;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: var(--font-mono);
-            font-size: 11px;
-            color: var(--grey);
+            background: var(--surface);
+            color: var(--neutral);
             cursor: pointer;
             position: relative;
+            margin-bottom: 24px;
         }
+        .dropzone:hover { border-color: var(--ink); }
         .dropzone img {
             width: 100%;
             height: 100%;
             object-fit: cover;
             position: absolute;
-            top: 0;
-            left: 0;
+            top: 0; left: 0;
             display: none;
+            mix-blend-mode: luminosity;
+            opacity: 0.9;
         }
-        textarea {
-            width: 100%;
-            height: 150px;
-            border: 1px solid var(--hairline-thick);
-            background: transparent;
-            padding: 12px;
-            font-family: var(--font-archivo);
-            resize: none;
-        }
-        .lang-toggle {
+        .dropzone:hover img { mix-blend-mode: normal; opacity: 1; }
+        
+        .radio-group {
             display: flex;
-            gap: 12px;
-            font-family: var(--font-mono);
-            font-size: 11px;
+            gap: 24px;
+            margin-top: 16px;
         }
-        .lang-toggle label {
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: var(--font-mono);
+            font-size: 12px;
             cursor: pointer;
         }
+
         .timeline {
             display: flex;
             flex-direction: column;
-            gap: 8px;
-            margin-top: 22px;
+            gap: 1px;
+            background: var(--grid);
+            border: 1px solid var(--grid);
+            margin-top: 24px;
+            display: none;
         }
         .timeline-row {
             display: flex;
             justify-content: space-between;
-            font-family: var(--font-mono);
-            color: var(--grey);
+            background: var(--surface);
+            padding: 12px 16px;
         }
-        .timeline-row.active {
-            color: var(--red);
-        }
+        .timeline-row .status { color: var(--neutral); }
+        .timeline-row.active .status { color: var(--ink); }
+
         .result-panel {
             display: none;
             flex-direction: column;
-            gap: 22px;
+            gap: 40px;
+            margin-top: 64px;
         }
-        .verdict-huge {
-            font-size: clamp(40px, 8vw, 80px);
+        
+        .verdict-banner {
+            border: 1px solid var(--grid);
+            padding: 32px;
+            text-align: center;
+            background: var(--surface);
+        }
+        .risk-meter-bg {
+            height: 4px;
+            background: var(--grid);
+            width: 100%;
+            margin-top: 24px;
+        }
+        .risk-meter-fill {
+            height: 100%;
+            background: var(--warn);
+            transition: width 0.8s ease-out;
+        }
+
+        .data-table {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            background: var(--grid);
+            border: 1px solid var(--grid);
         }
         .data-row {
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            padding: 12px 0;
-            gap: 12px;
+            background: var(--surface);
+            padding: 16px;
         }
-        .data-row .headline {
-            font-size: 14px;
-            min-width: 120px;
+        .data-row .val { text-align: right; word-break: break-all; max-width: 60%; }
+        
+        .actions-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
-        .data-row .mono {
-            word-break: break-word;
-            text-align: right;
+        .actions-list li {
+            position: relative;
+            padding-left: 24px;
+            margin-bottom: 12px;
+            font-family: var(--font-body);
         }
-        .rule-section {
-            padding-bottom: 8px;
+        .actions-list li::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            color: var(--neutral);
+            font-family: var(--font-mono);
         }
     </style>
 </head>
-<body class="grid-bg">
-    <div class="container">
-        <!-- Left Panel: Input -->
-        <div class="panel left-panel">
-            <div class="headline" style="font-size: 32px;">KAVACH <span style="color:var(--red)">SCAN</span></div>
-            <p class="mono" style="color: var(--grey);">YOUR MESSAGE IS SENT TO GOOGLE'S GEMINI API (HOSTING GEMMA 4) FOR ANALYSIS. KAVACH DOES NOT STORE IT.</p>
-            
-            <form id="scanForm">
-                <div class="dropzone" id="dropzone">
-                    <span id="dropText">DROP IMAGE OR CLICK</span>
-                    <input type="file" id="imageInput" accept="image/png, image/jpeg, image/webp" style="display:none;">
-                    <img id="imagePreview" src="">
-                </div>
-                
-                <textarea id="textInput" placeholder="Paste message text here..."></textarea>
-                
-                <div class="lang-toggle">
-                    <label><input type="radio" name="lang" value="en" checked> EN</label>
-                    <label><input type="radio" name="lang" value="hi"> हिं</label>
-                    <label><input type="radio" name="lang" value="bn"> বাং</label>
-                </div>
-                
-                <button type="submit" class="red" style="width: 100%;">ANALYSE</button>
-            </form>
-
-            <div class="timeline" id="timeline" style="display: none;">
-                <div class="timeline-row rule-row" id="stage-ingest"><span>INGEST</span><span class="status">PENDING</span></div>
-                <div class="timeline-row rule-row" id="stage-extract"><span>EXTRACT</span><span class="status">PENDING</span></div>
-                <div class="timeline-row rule-row" id="stage-rules"><span>SCORE</span><span class="status">PENDING</span></div>
-                <div class="timeline-row rule-row" id="stage-classify"><span>CLASSIFY</span><span class="status">PENDING</span></div>
-                <div class="timeline-row rule-row" id="stage-explain"><span>EXPLAIN</span><span class="status">PENDING</span></div>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo-box">K</a>
+            <div class="nav-links mono">
+                <a href="/scan" style="color:var(--coral);">01. SCAN</a>
+                <a href="/radar">02. RADAR</a>
+                <a href="/drill">03. DRILL</a>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <a href="/" class="btn btn-ghost">HOME</a>
             </div>
         </div>
+    </nav>
 
-        <!-- Right Panel: Results -->
-        <div class="panel" id="rightPanel">
-            <div class="result-panel" id="resultPanel">
-                <div class="headline verdict-huge" id="verdictText"></div>
+    <div class="container" style="max-width: 800px; padding-bottom: 120px;">
+        <div class="page-header">
+            <h1 class="heading heading-lg">SCAN ENGINE</h1>
+            <p class="mono text-neutral">SUBMIT PAYLOAD FOR STRUCTURAL ANALYSIS</p>
+        </div>
+
+        <form id="scanForm" class="tech-form-box">
+            <div class="corner-marker tl"></div>
+            <div class="corner-marker tr"></div>
+            <div class="corner-marker bl"></div>
+            <div class="corner-marker br"></div>
+
+            <div class="mono" style="margin-bottom: 8px;">[ IMAGE PAYLOAD ]</div>
+            <div class="dropzone" id="dropzone">
+                <span id="dropText" class="mono text-neutral">CLICK OR DRAG IMAGE</span>
+                <input type="file" id="imageInput" accept="image/png, image/jpeg, image/webp" style="display:none;">
+                <img id="imagePreview" src="">
+            </div>
+
+            <div class="mono" style="margin-bottom: 8px;">[ TEXT PAYLOAD ]</div>
+            <textarea id="textInput" placeholder="Enter message text..."></textarea>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:24px;">
+                <div class="radio-group">
+                    <label><input type="radio" name="lang" value="en" checked> EN</label>
+                    <label><input type="radio" name="lang" value="hi"> HI</label>
+                    <label><input type="radio" name="lang" value="bn"> BN</label>
+                </div>
+                <button type="submit" class="btn btn-primary">EXECUTE SCAN</button>
+            </div>
+            
+            <div class="timeline" id="timeline">
+                <div class="timeline-row mono" id="stage-ingest"><span>INGEST</span><span class="status">PENDING</span></div>
+                <div class="timeline-row mono" id="stage-extract"><span>EXTRACT</span><span class="status">PENDING</span></div>
+                <div class="timeline-row mono" id="stage-rules"><span>RULES</span><span class="status">PENDING</span></div>
+                <div class="timeline-row mono" id="stage-classify"><span>CLASSIFY</span><span class="status">PENDING</span></div>
+                <div class="timeline-row mono" id="stage-explain"><span>EXPLAIN</span><span class="status">PENDING</span></div>
+            </div>
+        </form>
+
+        <div class="result-panel" id="resultPanel">
+            <div class="verdict-banner">
+                <div class="mono text-neutral" style="margin-bottom: 16px;">[ ANALYSIS VERDICT ]</div>
+                <h2 class="heading heading-huge" id="verdictText"></h2>
+                <div class="risk-meter-bg">
+                    <div class="risk-meter-fill" id="riskMeter" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div class="bento-grid">
+                <div class="bento-cell" style="grid-column: span 12;">
+                    <div class="mono left-accent-coral" style="margin-bottom: 16px;">EXTRACTED TACTICS</div>
+                    <div class="data-table" id="tacticsContainer"></div>
+                </div>
+
+                <div class="bento-cell" style="grid-column: span 12;">
+                    <div class="mono left-accent-mint" style="margin-bottom: 16px;">TECHNICAL INDICATORS</div>
+                    <div class="data-table" id="indicatorsContainer"></div>
+                </div>
+
+                <div class="bento-cell" style="grid-column: span 12;">
+                    <div class="mono left-accent-gold" style="margin-bottom: 16px;">EXPLANATION</div>
+                    <p id="explanationText"></p>
+                </div>
                 
-                <div class="meter-bg">
-                    <div class="meter-fill" id="riskMeter" style="width: 0%;"></div>
+                <div class="bento-cell" style="grid-column: span 12;">
+                    <div class="mono left-accent-ink" style="margin-bottom: 16px;">RECOMMENDED ACTIONS</div>
+                    <ul class="actions-list" id="actionsList"></ul>
                 </div>
+            </div>
 
-                <div class="rule-section" id="tacticsContainer">
-                    <div class="mono" style="margin: 12px 0;">DETECTED TACTICS</div>
-                </div>
-
-                <div class="rule-section" id="indicatorsContainer">
-                    <div class="mono" style="margin: 12px 0;">INDICATORS</div>
-                </div>
-
-                <div class="rule-section">
-                    <div class="mono" style="margin: 12px 0;">EXPLANATION</div>
-                    <p id="explanationText" class="split-rev"></p>
-                </div>
-
-                <div class="rule-section">
-                    <div class="mono" style="margin: 12px 0;">WHAT TO DO NOW</div>
-                    <ol id="actionsList" style="padding-left: 20px;"></ol>
-                </div>
-
-                <div class="rule-section mono" style="display:flex; justify-content:space-between; padding-top: 12px;">
-                    <span id="campaignStrap">CAMPAIGN --</span>
-                    <span id="modelStrap" style="color:var(--grey)">MODEL --</span>
-                </div>
+            <div class="mono text-neutral" style="display:flex; justify-content:space-between;">
+                <span id="campaignStrap"></span>
+                <span id="modelStrap"></span>
             </div>
         </div>
     </div>

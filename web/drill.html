@@ -6,91 +6,107 @@
     <title>Kavach - Drill</title>
     <link rel="stylesheet" href="/static/tokens.css">
     <style>
-        .container {
+        .drill-container {
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            padding: 44px;
+            min-height: calc(100vh - 140px);
         }
-        .drill-frame {
-            border: 2px solid var(--ink);
-            padding: 44px;
-            max-width: 600px;
-            width: 100%;
-            background: var(--paper);
+        .drill-card {
             position: relative;
+            background: var(--bg);
+            border: 1px solid var(--grid);
+            padding: 40px;
+            max-width: 640px;
+            width: 100%;
         }
-        .drill-strap {
+        .drill-card .corner-marker {
             position: absolute;
-            top: -12px;
-            left: 44px;
-            background: var(--paper);
-            padding: 0 12px;
-            font-family: var(--font-mono);
-            font-size: 11px;
-            color: var(--red);
-            letter-spacing: 0.26em;
+            width: 10px;
+            height: 10px;
+            border: 2px solid var(--ink);
         }
-        .drill-message {
+        .drill-card .corner-marker.tl { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .drill-card .corner-marker.tr { top: -1px; right: -1px; border-left: none; border-bottom: none; }
+        .drill-card .corner-marker.bl { bottom: -1px; left: -1px; border-right: none; border-top: none; }
+        .drill-card .corner-marker.br { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+        
+        .payload-box {
+            background: var(--surface);
+            border: 1px solid var(--grid);
+            padding: 24px;
             font-size: 18px;
-            margin-bottom: 44px;
+            line-height: 1.6;
+            margin: 32px 0;
+            color: var(--ink);
         }
-        .buttons {
+
+        .action-group {
             display: flex;
-            gap: 22px;
+            gap: 16px;
             justify-content: center;
         }
-        .btn-outline {
-            background: transparent;
-            border: 2px solid var(--ink);
-            color: var(--ink);
-            padding: 12px 24px;
-            font-family: var(--font-mono);
-            font-size: 11px;
-            letter-spacing: 0.26em;
-            cursor: pointer;
-            text-transform: uppercase;
-        }
+
         .reveal-section {
             display: none;
-            margin-top: 44px;
-            border-top: 1px solid var(--hairline-thick);
-            padding-top: 22px;
+            margin-top: 40px;
+            border-top: 1px solid var(--grid);
+            padding-top: 24px;
         }
+
         .red-flag {
-            text-decoration: underline;
-            text-decoration-color: var(--red);
-            text-decoration-thickness: 2px;
+            background: rgba(255, 68, 51, 0.1);
+            border-bottom: 2px solid var(--warn);
         }
     </style>
 </head>
-<body class="grid-bg">
-    <div class="container">
-        <div class="drill-frame">
-            <div class="drill-strap">[KAVACH DRILL]</div>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo-box">K</a>
+            <div class="nav-links mono">
+                <a href="/scan">01. SCAN</a>
+                <a href="/radar">02. RADAR</a>
+                <a href="/drill" style="color:var(--coral);">03. DRILL</a>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <a href="/" class="btn btn-ghost">HOME</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container drill-container">
+        <div class="drill-card">
+            <div class="corner-marker tl"></div>
+            <div class="corner-marker tr"></div>
+            <div class="corner-marker bl"></div>
+            <div class="corner-marker br"></div>
             
-            <div class="drill-message" id="messageText">
+            <div class="status-badge" style="margin-bottom: 16px;">
+                <div class="status-dot"></div>
+                <span class="mono">TRAINING DRILL</span>
+            </div>
+
+            <div class="payload-box" id="messageText">
                 Dear customer, your bank account requires urgent verification. Click here: http://sbi-verify.example.invalid
             </div>
             
-            <div class="buttons" id="btnGroup">
-                <button class="btn-outline" onclick="drillReveal(false)">LOOKS REAL</button>
-                <button class="red" onclick="drillReveal(true)">SCAM</button>
+            <div class="action-group" id="btnGroup">
+                <button class="btn btn-ghost" onclick="drillReveal(false)">LOOKS REAL</button>
+                <button class="btn btn-primary" onclick="drillReveal(true)">SCAM</button>
             </div>
             
             <div class="reveal-section" id="revealSection">
-                <div class="headline" style="font-size:32px; margin-bottom:12px;" id="revealTitle">IT'S A SCAM</div>
-                <div class="mono" style="margin-bottom:22px;">TACTIC: FAKE_KYC</div>
+                <h2 class="heading heading-md" id="revealTitle" style="margin-bottom:8px;">IT'S A SCAM</h2>
+                <div class="mono left-accent-coral" style="margin-bottom:24px;">TACTIC: FAKE_KYC</div>
                 
-                <p>The highlighted parts are red flags:</p>
-                <p style="margin-top:12px; padding:12px; border-left:2px solid var(--red);">
+                <p class="text-neutral" style="margin-bottom: 16px;">The highlighted parts are structural red flags:</p>
+                <div class="payload-box" style="margin:0; padding:16px;">
                     Dear customer, your bank account requires <span class="red-flag">urgent verification</span>. Click here: <span class="red-flag">http://sbi-verify.example.invalid</span>
-                </p>
+                </div>
                 
-                <div style="margin-top:44px; text-align:center;">
-                    <a href="#" class="mono red" style="text-decoration:none;">SHARE THIS DRILL</a>
+                <div style="margin-top:40px; text-align:center;">
+                    <a href="#" class="btn btn-ghost">NEXT DRILL</a>
                 </div>
             </div>
         </div>

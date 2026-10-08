@@ -6,106 +6,159 @@
     <title>Kavach - Radar</title>
     <link rel="stylesheet" href="/static/tokens.css">
     <style>
-        .container {
+        .radar-grid {
             display: grid;
             grid-template-columns: 1fr;
-            min-height: 100vh;
+            gap: 1px;
+            background: var(--grid);
+            border: 1px solid var(--grid);
+            margin-bottom: 80px;
         }
         @media (min-width: 1024px) {
-            .container {
+            .radar-grid {
                 grid-template-columns: 320px 1fr 320px;
             }
         }
-        .panel {
-            padding: 44px;
-            border-right: 1px solid var(--hairline-thick);
+        .radar-panel {
+            background: var(--surface);
+            padding: 32px;
             display: flex;
             flex-direction: column;
-            gap: 22px;
+            gap: 24px;
+        }
+        .canvas-container {
+            position: relative;
+            background: var(--bg);
+            min-height: 400px;
+            overflow: hidden;
+            border-bottom: 1px solid var(--grid);
+        }
+        @media (min-width: 1024px) {
+            .canvas-container { border-bottom: none; }
         }
         canvas {
             width: 100%;
             height: 100%;
-            mix-blend-mode: multiply;
+            position: absolute;
+            top: 0; left: 0;
+            mix-blend-mode: luminosity;
+        }
+        
+        .data-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
         .bar-row {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            margin: 8px 0;
-            gap: 8px;
+            gap: 12px;
         }
         .bar-container {
             flex-grow: 1;
-            height: 6px;
-            background: var(--hairline-thin);
-            margin: 0 10px;
+            height: 4px;
+            background: var(--grid);
+            position: relative;
         }
         .bar-fill {
             height: 100%;
-            background: var(--red);
-            transition: width 0.5s ease;
+            background: var(--ink);
+            position: absolute;
+            top: 0; left: 0;
         }
-        .nlq-container {
+
+        .nlq-bar {
             position: fixed;
             bottom: 0;
+            left: 0;
             width: 100%;
-            padding: 22px;
-            background: var(--paper);
-            border-top: 2px solid var(--ink);
+            background: var(--bg);
+            border-top: 1px solid var(--grid);
+            padding: 16px;
+            z-index: 100;
+        }
+        .nlq-container {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             flex-direction: column;
             gap: 8px;
-            z-index: 100;
         }
         .nlq-row {
             display: flex;
             gap: 12px;
+            align-items: center;
         }
         .nlq-response {
             font-family: var(--font-mono);
-            font-size: 11px;
-            color: var(--red);
+            font-size: 12px;
+            color: var(--ink);
             display: none;
+            padding-bottom: 8px;
         }
     </style>
 </head>
-<body class="grid-bg">
-    <div class="container">
-        <!-- Left Panel: Trends -->
-        <div class="panel">
-            <div class="headline" style="font-size: 32px;">TRENDS</div>
-            <div class="mono" id="trendsSource" style="color:var(--grey)">LOADING DATA...</div>
-            
-            <div id="trendsList" class="rule-section" style="padding-top:22px;">
-                <div class="mono" style="color:var(--grey)">FETCHING TRENDS...</div>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo-box">K</a>
+            <div class="nav-links mono">
+                <a href="/scan">01. SCAN</a>
+                <a href="/radar" style="color:var(--coral);">02. RADAR</a>
+                <a href="/drill">03. DRILL</a>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <a href="/" class="btn btn-ghost">HOME</a>
             </div>
         </div>
+    </nav>
 
-        <!-- Center Panel: Graph -->
-        <div class="panel" style="padding: 0; overflow: hidden; position: relative;">
-            <canvas id="campaignGraph"></canvas>
-            <div style="position:absolute; top:44px; left:44px; font-size: 32px;" class="headline">CAMPAIGN GRAPH</div>
-        </div>
+    <div class="container" style="max-width: 1400px;">
+        <div class="radar-grid">
+            <!-- Left Panel: Trends -->
+            <div class="radar-panel">
+                <div class="status-badge" style="align-self: flex-start; margin-bottom: 8px;">
+                    <div class="status-dot"></div>
+                    <span class="mono">LIVE TELEMETRY</span>
+                </div>
+                <h2 class="heading heading-md">TRENDS</h2>
+                <div class="mono text-neutral" id="trendsSource">LOADING DATA...</div>
+                
+                <div class="data-list" id="trendsList" style="margin-top: 16px;">
+                    <div class="mono text-neutral">FETCHING TRENDS...</div>
+                </div>
+            </div>
 
-        <!-- Right Panel: Recent -->
-        <div class="panel" style="border-right: none;">
-            <div class="headline" style="font-size: 32px;">RECENT</div>
-            <div class="mono" id="campaignsSource" style="color:var(--grey)">ACTIVE CAMPAIGNS</div>
-            
-            <div id="campaignsList" class="rule-section" style="padding-top:22px;">
-                <div class="mono" style="color:var(--grey)">FETCHING CAMPAIGNS...</div>
+            <!-- Center Panel: Graph -->
+            <div class="canvas-container">
+                <div class="mono" style="position:absolute; top:24px; left:24px; z-index:10; font-size:14px;">[ TOPOLOGY GRAPH ]</div>
+                <canvas id="campaignGraph"></canvas>
+            </div>
+
+            <!-- Right Panel: Campaigns -->
+            <div class="radar-panel">
+                <div class="status-badge" style="align-self: flex-start; margin-bottom: 8px;">
+                    <div class="status-dot"></div>
+                    <span class="mono">CLUSTER SYNC</span>
+                </div>
+                <h2 class="heading heading-md">CAMPAIGNS</h2>
+                <div class="mono text-neutral" id="campaignsSource">ACTIVE CAMPAIGNS</div>
+                
+                <div class="data-list" id="campaignsList" style="margin-top: 16px;">
+                    <div class="mono text-neutral">FETCHING CAMPAIGNS...</div>
+                </div>
             </div>
         </div>
     </div>
     
-    <!-- NLQ Query Bar -->
-    <div class="nlq-container">
-        <div class="nlq-response" id="queryResponse"></div>
-        <div class="nlq-row">
-            <span class="mono" style="align-self:center;">ASK DATA (LOCAL FILTER):</span>
-            <input type="text" id="queryInput" placeholder="e.g. KYC, C-0042, or active tactics" style="flex-grow:1; padding:12px; border:1px solid var(--ink); background:transparent; font-family:var(--font-archivo);">
-            <button class="red" id="queryBtn">QUERY</button>
+    <div class="nlq-bar">
+        <div class="nlq-container">
+            <div class="nlq-response" id="queryResponse"></div>
+            <div class="nlq-row">
+                <span class="mono text-neutral">QUERY:</span>
+                <input type="text" id="queryInput" placeholder="Enter natural language query..." style="flex-grow:1; background:transparent; border:none; border-bottom:1px solid var(--ink); padding:8px 0; outline:none;">
+                <button class="btn btn-primary" id="queryBtn" style="padding: 8px 16px;">EXEC</button>
+            </div>
         </div>
     </div>
 

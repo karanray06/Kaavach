@@ -10,7 +10,6 @@ from app.config import GEMINI_MODEL_ID
 
 load_dotenv(override=True)
 logger = logging.getLogger("kavach.gemma")
-
 FALLBACK_MODELS = ["gemini-3.8-flash-lite", "gemini-2.5-flash-preview-05-20"]
 
 class Tactic(BaseModel):
@@ -37,7 +36,7 @@ def classify_text_and_image(text: str = "", image_bytes: bytes | None = None, mi
     
     lang_names = {"en": "English", "hi": "Hindi", "bn": "Bengali"}
     target_lang = lang_names.get(lang, "English")
-    
+
     system_instruction = (
         "You are a scam analysis expert for Kavach. Analyze the submitted content to identify social engineering tactics, "
         "impersonation, urgency, and fraud indicators. "
@@ -91,3 +90,4 @@ def classify_text_and_image(text: str = "", image_bytes: bytes | None = None, mi
                     raise  # Other errors (auth, invalid key, etc.) - fail immediately
 
     raise last_error
+

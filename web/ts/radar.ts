@@ -43,17 +43,17 @@ async function loadTrends(): Promise<void> {
     cachedTrends = data.trends || [];
     sourceEl.innerText = data.source === 'snowflake' ? 'SNOWFLAKE LIVE' : 'MEMORY CACHE';
     if (cachedTrends.length === 0) {
-      container.innerHTML = '<div class="mono" style="color:var(--grey)">NO TRENDING DATA YET</div>';
+      container.innerHTML = '<div class="mono" style="color:var(--neutral)">NO TRENDING DATA YET</div>';
       return;
     }
     const maxCount: number = Math.max(...cachedTrends.map((t: RadarTrendItem) => t.count || 1), 1);
     container.innerHTML = cachedTrends.map((t: RadarTrendItem): string => {
       const pct: number = Math.min(Math.round((t.count / maxCount) * 100), 100);
       const deltaStr: string = t.delta !== undefined ? (t.delta >= 0 ? `+${t.delta}%` : `${t.delta}%`) : `${t.count} hits`;
-      return `<div class="bar-row"><span class="headline" style="font-size:16px;">${radarEscapeHtml(t.tactic || 'UNKNOWN')}</span><div class="bar-container"><div class="bar-fill" style="width:${pct}%;"></div></div><span class="mono red">${radarEscapeHtml(deltaStr)}</span></div>`;
+      return `<div class="bar-row"><span class="mono" style="min-width:100px;">${radarEscapeHtml(t.tactic || 'UNKNOWN')}</span><div class="bar-container"><div class="bar-fill" style="width:${pct}%;"></div></div><span class="mono text-neutral">${radarEscapeHtml(deltaStr)}</span></div>`;
     }).join('');
   } catch {
-    container.innerHTML = '<div class="mono red">FAILED TO LOAD TRENDS</div>';
+    container.innerHTML = '<div class="mono text-warn">FAILED TO LOAD TRENDS</div>';
   }
 }
 
@@ -68,14 +68,14 @@ async function loadCampaigns(): Promise<void> {
     cachedCampaigns = data.campaigns || [];
     sourceEl.innerText = data.source === 'snowflake' ? 'SNOWFLAKE ACTIVE' : 'ACTIVE CAMPAIGNS';
     if (cachedCampaigns.length === 0) {
-      container.innerHTML = '<div class="mono" style="color:var(--grey)">NO CAMPAIGNS RECORDED</div>';
+      container.innerHTML = '<div class="mono" style="color:var(--neutral)">NO CAMPAIGNS RECORDED</div>';
       return;
     }
     container.innerHTML = cachedCampaigns.map((c: RadarCampaignItem): string =>
-      `<div class="data-row rule-row" style="display:flex;justify-content:space-between;padding:8px 0;"><span class="mono">${radarEscapeHtml(c.campaign_id || '')}</span><span class="mono red">${radarEscapeHtml(String(c.variant_count || 1))} VARIANTS</span></div>`
+      `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--grid);"><span class="mono">${radarEscapeHtml(c.campaign_id || '')}</span><span class="mono text-warn">${radarEscapeHtml(String(c.variant_count || 1))} VARIANTS</span></div>`
     ).join('');
   } catch {
-    container.innerHTML = '<div class="mono red">FAILED TO LOAD CAMPAIGNS</div>';
+    container.innerHTML = '<div class="mono text-warn">FAILED TO LOAD CAMPAIGNS</div>';
   }
 }
 

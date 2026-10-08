@@ -138,10 +138,10 @@ function showScanResults(data: ScanResult): void {
     data.verdict === 'NO_RED_FLAGS' ? 'NO RED FLAGS FOUND' : data.verdict.replace(/_/g, ' ');
   vText.innerText = verdictDisplay;
 
-  if (data.verdict === 'LIKELY_SCAM') vText.style.color = 'var(--red)';
-  else if (data.verdict === 'COULD_NOT_ASSESS') vText.style.color = 'var(--grey)';
+  if (data.verdict === 'LIKELY_SCAM') vText.style.color = 'var(--warn)';
+  else if (data.verdict === 'COULD_NOT_ASSESS') vText.style.color = 'var(--neutral)';
   else if (data.verdict === 'NO_RED_FLAGS') vText.style.color = 'var(--ink)';
-  else vText.style.color = 'var(--grey)';
+  else vText.style.color = 'var(--neutral)';
 
   (document.getElementById('riskMeter') as HTMLDivElement).style.width =
     `${Math.min(Math.max(data.risk_score * 100, 0), 100)}%`;
@@ -152,8 +152,8 @@ function showScanResults(data: ScanResult): void {
   if (data.tactics && data.tactics.length > 0) {
     data.tactics.forEach((t: ScanTactic): void => {
       const row = document.createElement('div');
-      row.className = 'data-row rule-row';
-      row.innerHTML = `<span class="headline">${scanEscapeHtml(t.code || '')}</span><span class="mono">${scanEscapeHtml(t.evidence || '')}</span>`;
+      row.className = 'data-row';
+      row.innerHTML = `<span class="mono">${scanEscapeHtml(t.code || '')}</span><span class="mono val text-neutral">${scanEscapeHtml(t.evidence || '')}</span>`;
       tCont.appendChild(row);
     });
   } else {
@@ -166,8 +166,8 @@ function showScanResults(data: ScanResult): void {
   if (data.indicators && data.indicators.length > 0) {
     data.indicators.forEach((ind: ScanIndicator): void => {
       const row = document.createElement('div');
-      row.className = 'data-row rule-row';
-      row.innerHTML = `<span class="mono">${scanEscapeHtml(ind.type || '')} : ${scanEscapeHtml(ind.display || '')}</span><span class="mono red">SEEN ${scanEscapeHtml(String(ind.seen_before || 0))} TIMES</span>`;
+      row.className = 'data-row';
+      row.innerHTML = `<span class="mono">${scanEscapeHtml(ind.type || '')}: ${scanEscapeHtml(ind.display || '')}</span><span class="mono val text-warn">SEEN ${scanEscapeHtml(String(ind.seen_before || 0))} TIMES</span>`;
       iCont.appendChild(row);
     });
   } else {

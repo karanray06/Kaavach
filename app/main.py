@@ -1,5 +1,7 @@
 import os
 import logging
+import datetime
+import hashlib
 from typing import Optional
 from dotenv import load_dotenv
 from fastapi import FastAPI, Form, UploadFile, File, Request, BackgroundTasks
@@ -164,6 +166,11 @@ async def scan(
     # If there's neither text nor image, reject with 400
     if not text and not image_bytes:
         return JSONResponse(status_code=400, content={"error": "Must provide either text or image"})
+    today_salt = datetime.datetime.now().strftime("%Y-%m-%d")
+    client_ip = request.client.host if request.client else "unknown"
+    user_agent = request.headers.get("user-agent", "unknown")
+    raw = f"{client_ip}:{user_agent}:{today_salt}"
+    client_id = hashlib.sha256(raw.encode()).hexdigest()
 
     try:
         result = run_scan(
@@ -171,6 +178,7 @@ async def scan(
             image_bytes=image_bytes,
             mime_type=mime_type,
             lang=lang,
+            client_id=client_id,
             background_tasks=background_tasks
         )
         return JSONResponse(content=result)

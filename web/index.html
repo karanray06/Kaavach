@@ -3,92 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kavach - Immune System for Scams</title>
+    <title>Kavach - System</title>
     <link rel="stylesheet" href="/static/tokens.css">
     <style>
-        .container {
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
         .hero {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 44px;
-            max-width: 1200px;
-        }
-        .huge-title {
-            font-size: clamp(60px, 15vw, 200px);
-            line-height: 0.85;
-            margin-bottom: 22px;
-        }
-        .nav {
-            display: flex;
-            gap: 22px;
-            padding: 44px;
-            border-bottom: 1px solid var(--hairline-thick);
-        }
-        .nav a {
-            font-family: var(--font-mono);
-            font-size: 11px;
-            letter-spacing: 0.26em;
-            color: var(--ink);
-            text-decoration: none;
-            text-transform: uppercase;
-        }
-        .nav a:hover {
-            color: var(--red);
-        }
-        .grid-blocks {
+            padding: 120px 0 80px 0;
             display: grid;
-            grid-template-columns: 1fr;
-            border-top: 2px solid var(--ink);
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
         }
-        @media (min-width: 768px) {
-            .grid-blocks {
-                grid-template-columns: 1fr 1fr 1fr;
+        @media (max-width: 768px) {
+            .hero {
+                grid-template-columns: 1fr;
+                padding: 60px 0;
             }
         }
-        .block {
-            padding: 44px;
-            border-right: 1px solid var(--hairline-thick);
-            border-bottom: 1px solid var(--hairline-thick);
+        .wireframe-graphic {
+            width: 100%;
+            aspect-ratio: 1;
+            border: 1px solid var(--grid);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .wireframe-orbit {
+            width: 280px;
+            height: 280px;
+            border: 1px dashed var(--ink);
+            border-radius: 50%;
+            position: absolute;
+            animation: spin 30s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
+        .mockup-box {
+            background: var(--bg);
+            border: 1px solid var(--grid);
+            padding: 16px;
+            font-family: var(--font-mono);
+            font-size: 10px;
+            color: var(--neutral);
         }
     </style>
 </head>
-<body class="grid-bg">
-    <div class="container">
-        <div class="nav">
-            <a href="/scan">Scan</a>
-            <a href="/radar">Radar</a>
-            <a href="/drill">Drill</a>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo-box">K</a>
+            <div class="nav-links mono">
+                <a href="/scan">01. SCAN</a>
+                <a href="/radar">02. RADAR</a>
+                <a href="/drill">03. DRILL</a>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <a href="https://github.com/karanray06/Kaavach" class="btn btn-ghost">SOURCE</a>
+                <a href="/scan" class="btn btn-primary">LAUNCH</a>
+            </div>
         </div>
-        
+    </nav>
+
+    <div class="container">
         <div class="hero">
-            <div class="headline huge-title split-rev">KAVACH</div>
-            <div class="mono split-rev" style="font-size: 18px; letter-spacing: 0.1em; color: var(--grey); max-width: 600px;">
-                OPEN SOURCE / GEMMA 4 / SCAM TRIAGE
+            <div>
+                <div class="status-badge" style="margin-bottom: 24px;">
+                    <div class="status-dot"></div>
+                    <span class="mono">SYSTEM ACTIVE</span>
+                </div>
+                <h1 class="heading heading-huge" style="margin-bottom: 24px;">KAVACH<br>SYSTEM</h1>
+                <div class="left-accent-ink mono" style="color: var(--neutral); max-width: 400px; margin-bottom: 40px; line-height: 1.8;">
+                    OPEN SOURCE / SCAM TRIAGE / GEMMA 4 <br>
+                    A STRUCTURAL DEFENSE MECHANISM AGAINST SOCIAL ENGINEERING CAMPAIGNS.
+                </div>
+                <a href="/scan" class="btn btn-primary">INITIALIZE SCAN</a>
             </div>
             
-            <div style="margin-top: 44px;">
-                <button class="red" onclick="window.location.href='/scan'">LAUNCH SCANNER</button>
+            <div class="wireframe-graphic">
+                <div class="corner-marker tl"></div>
+                <div class="corner-marker tr"></div>
+                <div class="corner-marker bl"></div>
+                <div class="corner-marker br"></div>
+                <div class="wireframe-orbit"></div>
+                <div style="width:16px; height:16px; background:var(--ink);"></div>
             </div>
         </div>
-        
-        <div class="grid-blocks">
-            <div class="block">
-                <div class="headline" style="font-size: 32px; margin-bottom: 12px;">SCAN</div>
-                <p>Gemma 4 classification with rule-based extraction scores messages and screenshots for risk.</p>
+
+        <div class="divider"></div>
+
+        <div class="bento-grid" style="margin-bottom: 120px;">
+            <div class="bento-cell" style="grid-column: span 6;">
+                <div class="mono left-accent-coral" style="margin-bottom: 24px;">01. SCAN ENGINE</div>
+                <h2 class="heading heading-md" style="margin-bottom: 16px;">Structural Analysis</h2>
+                <p style="margin-bottom: 24px; color: var(--neutral);">Gemma 4 classification with rule-based extraction scores messages and screenshots for risk vectors.</p>
+                <div class="mockup-box">
+                    > INGESTING PAYLOAD...<br>
+                    > EXTRACTING ENTITIES... [OK]<br>
+                    > VERDICT: <span style="color:var(--warn)">SCAM LIKELY</span>
+                </div>
             </div>
-            <div class="block">
-                <div class="headline" style="font-size: 32px; margin-bottom: 12px;">RADAR</div>
-                <p>Snowflake powers real-time views of trending tactics, campaign growth, and cross-references with Cybersixgill dark web datasets.</p>
+            
+            <div class="bento-cell" style="grid-column: span 6;">
+                <div class="mono left-accent-mint" style="margin-bottom: 24px;">02. RADAR TELEMETRY</div>
+                <h2 class="heading heading-md" style="margin-bottom: 16px;">Threat Topology</h2>
+                <p style="margin-bottom: 24px; color: var(--neutral);">Snowflake powers real-time views of trending tactics, campaign growth, and cross-references.</p>
+                <div class="mockup-box">
+                    SELECT tactic, count(*) <br>
+                    FROM core.scans <br>
+                    WHERE timestamp >= DATEADD(day, -7, CURRENT_TIMESTAMP())
+                </div>
             </div>
-            <div class="block">
-                <div class="headline" style="font-size: 32px; margin-bottom: 12px;">DNA</div>
-                <p>Every scam is fingerprinted using simhash clustering, mapping individual attacks to larger organized campaigns.</p>
+
+            <div class="bento-cell" style="grid-column: span 12;">
+                <div class="mono left-accent-gold" style="margin-bottom: 24px;">03. INOCULATION</div>
+                <h2 class="heading heading-md" style="margin-bottom: 16px;">Active Drills</h2>
+                <p style="margin-bottom: 24px; color: var(--neutral); max-width: 600px;">Every scam is fingerprinted using simhash clustering. Test your resilience against known campaigns.</p>
+                <a href="/drill" class="btn btn-ghost">START TRAINING DRILL</a>
             </div>
         </div>
     </div>

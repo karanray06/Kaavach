@@ -12,7 +12,7 @@ function drillReveal(guessedScam: boolean): void {
   const title = document.getElementById('revealTitle') as HTMLDivElement;
   if (guessedScam) {
     title.innerText = "CORRECT. IT'S A SCAM.";
-    title.style.color = 'var(--red)';
+    title.style.color = 'var(--warn)';
   } else {
     title.innerText = "CAREFUL. IT'S A SCAM.";
     title.style.color = 'var(--ink)';
