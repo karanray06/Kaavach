@@ -47,15 +47,27 @@
         .data-list {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 12px;
         }
         .bar-row {
             display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--grid);
+        }
+        .bar-header {
+            display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 12px;
+        }
+        .bar-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
         .bar-container {
-            flex-grow: 1;
+            width: 100%;
             height: 4px;
             background: var(--grid);
             position: relative;
@@ -65,6 +77,30 @@
             background: var(--ink);
             position: absolute;
             top: 0; left: 0;
+            transition: width 0.3s ease;
+        }
+        .trend-badge {
+            font-family: var(--font-mono);
+            font-size: 10px;
+            padding: 2px 6px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        .badge-up {
+            color: var(--warn);
+            border: 1px solid var(--warn);
+        }
+        .badge-down {
+            color: #2E7D32;
+            border: 1px solid #2E7D32;
+        }
+        .badge-new {
+            color: var(--coral);
+            border: 1px solid var(--coral);
+        }
+        .badge-flat {
+            color: var(--neutral);
+            border: 1px solid var(--grid);
         }
 
         .nlq-bar {
@@ -121,17 +157,23 @@
                     <div class="status-dot"></div>
                     <span class="mono">LIVE TELEMETRY</span>
                 </div>
-                <h2 class="heading heading-md">TRENDS</h2>
-                <div class="mono text-neutral" id="trendsSource">LOADING DATA...</div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <h2 class="heading heading-md">TRENDS</h2>
+                    <button class="btn btn-ghost" id="refreshBtn" style="padding: 4px 10px; font-size: 10px;" title="Refresh telemetry">REFRESH</button>
+                </div>
+                <div>
+                    <div class="mono text-neutral" id="trendsSource">LOADING DATA...</div>
+                    <div class="mono text-neutral" id="trendsMeta" style="font-size: 11px; margin-top: 4px;">TOTAL SCANS: -- | UPDATED: --</div>
+                </div>
                 
-                <div class="data-list" id="trendsList" style="margin-top: 16px;">
+                <div class="data-list" id="trendsList" style="margin-top: 8px;">
                     <div class="mono text-neutral">FETCHING TRENDS...</div>
                 </div>
             </div>
 
             <!-- Center Panel: Graph -->
             <div class="canvas-container">
-                <div class="mono" style="position:absolute; top:24px; left:24px; z-index:10; font-size:14px;">[ TOPOLOGY GRAPH ]</div>
+                <div class="mono" style="position:absolute; top:24px; left:24px; z-index:10; font-size:14px;">[ TOPOLOGY GRAPH (ILLUSTRATIVE / VARIANT-SIZED) ]</div>
                 <canvas id="campaignGraph"></canvas>
             </div>
 

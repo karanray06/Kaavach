@@ -18,6 +18,7 @@ from PIL import Image, ImageOps, UnidentifiedImageError
 from app.config import GEMINI_MODEL_ID
 from app.pipeline import run_scan, MEMORY_STORE, MEMORY_STORE_LOCK
 from app.snow import check_health, get_trending_tactics, get_recent_campaigns, get_snowflake_connection
+from app.trends import get_cached_trends, set_cached_trends, calculate_trend_metrics
 
 load_dotenv()
 logger = logging.getLogger("kavach.main")
@@ -86,26 +87,66 @@ async def health_check():
 
 @app.get("/api/trends")
 async def api_trends():
+    cached = get_cached_trends()
+    if cached is not None:
+        return JSONResponse(content=cached)
+
     trends = get_trending_tactics()
     if trends is not None:
-        return JSONResponse(content={"source": "snowflake", "trends": trends})
+        set_cached_trends(trends)
+        return JSONResponse(content=trends)
     
     # Fallback to MEMORY_STORE
-    tactic_counts = {}
+    now = datetime.datetime.now(datetime.timezone.utc)
+    cutoff_7d = now - datetime.timedelta(days=7)
+    cutoff_14d = now - datetime.timedelta(days=14)
+
+    total_scans_7d = 0
+    ai_unavail_7d = 0
+    curr_tactics = {}
+    prev_tactics = {}
+
     with MEMORY_STORE_LOCK:
         for s in MEMORY_STORE["scans"].values():
-            tac = s.get("primary_tactic", "UNKNOWN")
-            tactic_counts[tac] = tactic_counts.get(tac, 0) + 1
-            
-    if not tactic_counts:
-        fallback = [
-            {"tactic": "FAKE_KYC", "count": 14, "delta": 12},
-            {"tactic": "OTP_THEFT", "count": 8, "delta": 4},
-            {"tactic": "URGENCY", "count": 5, "delta": -2}
-        ]
-    else:
-        fallback = [{"tactic": k, "count": v, "delta": 0} for k, v in sorted(tactic_counts.items(), key=lambda x: x[1], reverse=True)[:5]]
-    return JSONResponse(content={"source": "memory", "trends": fallback})
+            if s.get("is_demo", False):
+                continue
+            ts_str = s.get("ts")
+            scan_time = None
+            if ts_str:
+                try:
+                    scan_time = datetime.datetime.fromisoformat(ts_str)
+                    if scan_time.tzinfo is None:
+                        scan_time = scan_time.replace(tzinfo=datetime.timezone.utc)
+                except Exception:
+                    scan_time = now
+            else:
+                scan_time = now
+
+            tactic = s.get("primary_tactic")
+            if not tactic and s.get("tactics"):
+                t_list = s.get("tactics")
+                if isinstance(t_list, list) and len(t_list) > 0 and isinstance(t_list[0], dict):
+                    tactic = t_list[0].get("code")
+
+            if scan_time >= cutoff_7d:
+                total_scans_7d += 1
+                if not s.get("ai_available", True) or s.get("verdict") == "UNCERTAIN" or not tactic or tactic in ("UNKNOWN", ""):
+                    ai_unavail_7d += 1
+                if tactic and tactic not in ("UNKNOWN", ""):
+                    curr_tactics[tactic] = curr_tactics.get(tactic, 0) + 1
+            elif scan_time >= cutoff_14d:
+                if tactic and tactic not in ("UNKNOWN", ""):
+                    prev_tactics[tactic] = prev_tactics.get(tactic, 0) + 1
+
+    mem_trends = calculate_trend_metrics(
+        curr_tactics=curr_tactics,
+        prev_tactics=prev_tactics,
+        total_scans=total_scans_7d,
+        ai_unavailable_count=ai_unavail_7d,
+        source="memory"
+    )
+    set_cached_trends(mem_trends)
+    return JSONResponse(content=mem_trends)
 
 @app.get("/api/campaigns")
 async def api_campaigns():
@@ -114,22 +155,22 @@ async def api_campaigns():
         return JSONResponse(content={"source": "snowflake", "campaigns": campaigns})
     
     # Fallback to MEMORY_STORE
+    camp_list = []
     with MEMORY_STORE_LOCK:
-        camp_list = []
-        for cid, cdata in list(MEMORY_STORE["campaigns"].items())[-5:]:
+        for cid, cdata in MEMORY_STORE["campaigns"].items():
+            if str(cid).startswith("C-DEMO"):
+                continue
+            tactic = cdata.get("primary_tactic", "UNKNOWN")
             camp_list.append({
                 "campaign_id": cid,
-                "variant_count": cdata.get("variant_count", 1),
-                "primary_tactic": cdata.get("primary_tactic", "UNKNOWN"),
-                "first_seen": cdata.get("first_seen", "unknown"),
-                "last_seen": cdata.get("last_seen", "unknown")
+                "variant_count": int(cdata.get("variant_count", 1)),
+                "top_tactic": tactic,
+                "primary_tactic": tactic,
+                "first_seen": str(cdata.get("first_seen", "unknown")),
+                "last_seen": str(cdata.get("last_seen", "unknown"))
             })
-    if not camp_list:
-        camp_list = [
-            {"campaign_id": "C-0042", "variant_count": 14, "primary_tactic": "FAKE_KYC", "first_seen": "demo", "last_seen": "demo"},
-            {"campaign_id": "C-0041", "variant_count": 3, "primary_tactic": "LOTTERY", "first_seen": "demo", "last_seen": "demo"}
-        ]
-    return JSONResponse(content={"source": "memory", "campaigns": camp_list})
+    camp_list.sort(key=lambda x: str(x.get("last_seen", "")), reverse=True)
+    return JSONResponse(content={"source": "memory", "campaigns": camp_list[:5]})
 
 @app.get("/api/drill/sample")
 async def drill_sample():

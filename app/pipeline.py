@@ -1,4 +1,5 @@
 import time
+import datetime
 import uuid
 import json
 import os
@@ -46,6 +47,8 @@ def record_scan_in_memory(scan_id: str, scan_record: dict):
         MEMORY_STORE["scans"][scan_id] = scan_record
         if len(MEMORY_STORE["scans"]) > MAX_MEMORY_SCANS:
             MEMORY_STORE["scans"].popitem(last=False)
+    from app.trends import invalidate_trends_cache
+    invalidate_trends_cache()
 
 def sync_persist_to_snowflake(scan_record: dict, snowflake_indicators: List[dict]):
     """
@@ -65,6 +68,8 @@ def sync_persist_to_snowflake(scan_record: dict, snowflake_indicators: List[dict
                 "variant_no": campaign_info.get("variant_no", 1),
                 "centroid_simhash": campaign_info.get("centroid_simhash", 0)
             })
+        from app.trends import invalidate_trends_cache
+        invalidate_trends_cache()
     except Exception as e:
         logger.error("Snowflake background persistence failed: %s", e, exc_info=True)
 
@@ -199,8 +204,12 @@ def run_scan(
             
     timings["store"] = int((time.time() - t_store) * 1000)
     
+    tactics_code = tactics[0].get("code") if tactics and isinstance(tactics, list) and isinstance(tactics[0], dict) else "UNKNOWN"
     scan_record = {
         "scan_id": scan_id,
+        "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "is_demo": False,
+        "primary_tactic": tactics_code,
         "verdict": verdict,
         "risk_score": risk_score,
         "confidence": gemma_confidence,

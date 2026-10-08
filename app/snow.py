@@ -161,34 +161,91 @@ def insert_or_update_campaign(campaign_data: dict):
 
 def get_trending_tactics():
     """
-    Queries V_TRENDING_TACTICS view from Snowflake.
+    Queries KAVACH.CORE.SCANS (is_demo = FALSE) for 7-day current and 7-day prior windows
+    using DATEADD. Computes share percentages, week-over-week changes, total_scans,
+    and ai_unavailable_count.
     """
     conn = get_snowflake_connection()
     if not conn:
         return None
     try:
         cur = conn.cursor()
-        cur.execute("SELECT primary_tactic, current_count, delta_vs_prior FROM V_TRENDING_TACTICS ORDER BY current_count DESC LIMIT 5")
+        # 1. Total scans and AI-unavailable count for the last 7 days
+        totals_query = """
+        SELECT 
+            COUNT(*) as total_scans,
+            COUNT(CASE WHEN verdict = 'UNCERTAIN' OR primary_tactic IS NULL OR primary_tactic IN ('UNKNOWN', '') THEN 1 END) as ai_unavail
+        FROM KAVACH.CORE.SCANS
+        WHERE is_demo = FALSE AND ts >= DATEADD(day, -7, CURRENT_TIMESTAMP())
+        """
+        cur.execute(totals_query)
+        tot_row = cur.fetchone()
+        total_scans = tot_row[0] if tot_row and tot_row[0] is not None else 0
+        ai_unavailable_count = tot_row[1] if tot_row and tot_row[1] is not None else 0
+
+        # 2. Tactic counts for current 7 days and prior 7 days
+        tactics_query = """
+        SELECT 
+            primary_tactic,
+            COUNT(CASE WHEN ts >= DATEADD(day, -7, CURRENT_TIMESTAMP()) THEN 1 END) as curr_cnt,
+            COUNT(CASE WHEN ts >= DATEADD(day, -14, CURRENT_TIMESTAMP()) AND ts < DATEADD(day, -7, CURRENT_TIMESTAMP()) THEN 1 END) as prev_cnt
+        FROM KAVACH.CORE.SCANS
+        WHERE is_demo = FALSE 
+          AND primary_tactic IS NOT NULL 
+          AND primary_tactic NOT IN ('UNKNOWN', '')
+          AND ts >= DATEADD(day, -14, CURRENT_TIMESTAMP())
+        GROUP BY primary_tactic
+        HAVING curr_cnt > 0
+        ORDER BY curr_cnt DESC
+        """
+        cur.execute(tactics_query)
         rows = cur.fetchall()
         cur.close()
-        return [{"tactic": r[0], "count": r[1], "delta": r[2]} for r in rows]
+
+        curr_tactics = {r[0]: int(r[1]) for r in rows}
+        prev_tactics = {r[0]: int(r[2]) for r in rows}
+
+        from app.trends import calculate_trend_metrics
+        return calculate_trend_metrics(
+            curr_tactics=curr_tactics,
+            prev_tactics=prev_tactics,
+            total_scans=total_scans,
+            ai_unavailable_count=ai_unavailable_count,
+            source="snowflake"
+        )
     except Exception as e:
         logger.warning("Error querying trending tactics: %s", e)
         return None
 
 def get_recent_campaigns():
     """
-    Queries CAMPAIGNS table from Snowflake.
+    Queries CAMPAIGNS table from Snowflake, excluding demo campaigns.
     """
     conn = get_snowflake_connection()
     if not conn:
         return None
     try:
         cur = conn.cursor()
-        cur.execute("SELECT campaign_id, variant_count, primary_tactic, first_seen, last_seen FROM CAMPAIGNS ORDER BY last_seen DESC LIMIT 5")
+        cur.execute("""
+            SELECT campaign_id, variant_count, primary_tactic, first_seen, last_seen 
+            FROM CAMPAIGNS 
+            WHERE campaign_id NOT LIKE 'C-DEMO%' 
+            ORDER BY last_seen DESC 
+            LIMIT 5
+        """)
         rows = cur.fetchall()
         cur.close()
-        return [{"campaign_id": r[0], "variant_count": r[1], "primary_tactic": r[2], "first_seen": str(r[3]), "last_seen": str(r[4])} for r in rows]
+        return [
+            {
+                "campaign_id": r[0],
+                "variant_count": int(r[1]) if r[1] is not None else 1,
+                "top_tactic": r[2] or "UNKNOWN",
+                "primary_tactic": r[2] or "UNKNOWN",
+                "first_seen": str(r[3]),
+                "last_seen": str(r[4])
+            }
+            for r in rows
+        ]
     except Exception as e:
         logger.warning("Error querying recent campaigns: %s", e)
         return None
